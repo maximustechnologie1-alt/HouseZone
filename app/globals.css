@@ -1,26 +1,48 @@
 @import "tailwindcss";
 
 :root {
+  --color-navy: #082b5c;
+  --color-blue: #0066cc;
+  --color-gold: #f4b400;
+  --color-white: #ffffff;
+  --color-sky: #eaf4ff;
+  --color-ink: #10233f;
+
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #10233f;
 }
 
 @theme inline {
+  --color-hz-navy: var(--color-navy);
+  --color-hz-blue: var(--color-blue);
+  --color-hz-gold: var(--color-gold);
+  --color-hz-sky: var(--color-sky);
+  --color-hz-ink: var(--color-ink);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-inter);
+  --radius-card: 1.25rem;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.hz-container {
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .hz-container {
+    padding-inline: 1.5rem;
+  }
+}
+
+::selection {
+  background: var(--color-hz-sky, var(--color-sky));
+  color: var(--color-hz-navy, var(--color-navy));
 }

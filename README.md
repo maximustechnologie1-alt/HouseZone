@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HouseZone
 
-## Getting Started
+Plateforme immobilière Web & PWA pour le Burkina Faso — *Trouvez votre prochain bien.*
 
-First, run the development server:
+Construite selon le cahier des charges (`cdc.md`) avec **Next.js 16 (App Router) +
+TypeScript + Tailwind CSS v4 + Supabase**.
+
+## Démarrage
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ouvrez [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Connecter Supabase
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+L'application est écrite pour fonctionner avec Supabase (Postgres + Auth + Storage +
+RLS) mais n'est pas connectée à un projet par défaut. Pour l'activer :
 
-## Learn More
+1. Suivez `supabase/README.md` pour créer le projet et exécuter les migrations.
+2. Copiez `.env.example` vers `.env.local` et renseignez les clés.
+3. Redémarrez `npm run dev`.
 
-To learn more about Next.js, take a look at the following resources:
+Sans ces variables, les pages qui lisent la base retournent des listes vides plutôt
+que de planter — vous pouvez naviguer dans l'interface avant même d'avoir connecté
+Supabase.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+app/
+  (site)/          Espace public + Client (accueil, recherche, biens, favoris,
+                    visites, avis de recherche, messages, notifications, profil)
+  (auth)/          Inscription, connexion, mot de passe oublié
+  espace-hote/      Dashboard Hôte (annonces, visites, messages, abonnement...)
+  admin/            Administration HouseZone (connexion 2FA + dashboard)
+components/         Composants réutilisables (ui/, listings/, host/, admin/, ...)
+lib/
+  actions/          Server Actions (mutations) par domaine métier
+  data/             Fonctions de lecture Supabase par domaine
+  supabase/         Clients Supabase (browser, server, admin, proxy)
+  types/database.ts Types TypeScript reflétant le schéma SQL
+  messaging/        Filtre anti-contournement de la messagerie
+  moderation/        Filtre anti-publicité des avis de recherche
+  ocr/              Analyse OCR des photos d'annonce (Tesseract.js)
+  payments/         Abstraction fournisseur de paiement (Mobile Money manuel en V1)
+supabase/
+  migrations/       Schéma SQL complet (tables, RLS, triggers, buckets)
+proxy.ts            Middleware Next 16 : rafraîchit la session, protège
+                    /espace-hote et /admin par rôle
+```
 
-## Deploy on Vercel
+## Choix techniques V1
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Paiement** : confirmation manuelle (l'utilisateur transfère par Mobile Money puis
+  saisit une référence, un admin confirme depuis `/admin/paiements`). Architecture
+  pluggable dans `lib/payments/provider.ts` pour brancher CinetPay/PayDunya plus tard.
+- **Carte** : OpenStreetMap + Leaflet (gratuit, aucune clé API). `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
+  reste disponible dans `.env.example` si vous préférez migrer vers Google Maps.
+- **OCR** : Tesseract.js côté serveur, remplaçable dans `lib/ocr/analyze.ts`.
+- **2FA Admin** : TOTP via Supabase Auth MFA, enrôlement à la première connexion admin.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Déploiement
+
+Conçu pour Vercel. Pensez à définir les variables d'environnement de `.env.example`
+dans les paramètres du projet Vercel avant de déployer.
