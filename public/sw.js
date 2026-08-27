@@ -32,7 +32,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title || "HouseZone", {
       body: payload.body,
-      icon: "/icon",
+      icon: "/icon.png",
       data: { url: payload.url || "/" },
     })
   );

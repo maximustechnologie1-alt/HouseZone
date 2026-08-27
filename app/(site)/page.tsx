@@ -117,7 +117,9 @@ function Feature({
 }) {
   return (
     <div className="rounded-card border border-hz-navy/10 p-5">
-      <Icon className="h-6 w-6 text-hz-blue" />
+      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-hz-blue/10">
+        <Icon className="h-5.5 w-5.5 text-hz-blue" />
+      </span>
       <p className="mt-3 font-semibold text-hz-navy">{title}</p>
       <p className="mt-1 text-sm text-hz-ink/60">{text}</p>
     </div>

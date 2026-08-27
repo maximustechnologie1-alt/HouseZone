@@ -75,7 +75,9 @@ export default async function HostDashboardPage() {
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {stats.map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-card border border-hz-navy/10 bg-white p-4">
-            <Icon className="h-5 w-5 text-hz-blue" />
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-hz-blue/10">
+              <Icon className="h-4.5 w-4.5 text-hz-blue" strokeWidth={2.25} />
+            </span>
             <p className="mt-2 text-2xl font-semibold text-hz-navy">{value}</p>
             <p className="text-xs text-hz-ink/60">{label}</p>
           </div>

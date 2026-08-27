@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { AdminUserMenu } from "@/components/admin/admin-user-menu";
+import { LogoMark } from "@/components/ui/logo-mark";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -42,9 +43,7 @@ export default async function AdminDashboardLayout({ children }: LayoutProps<"/"
     <div className="flex min-h-screen bg-zinc-50">
       <aside className="hidden w-64 shrink-0 border-r border-hz-navy/10 bg-hz-navy p-5 text-white lg:block">
         <Link href="/admin" className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-hz-gold text-hz-navy font-bold">
-            H
-          </span>
+          <LogoMark size={36} />
           <span className="text-lg font-semibold">HouseZone Admin</span>
         </Link>
         <nav className="mt-8 space-y-0.5 text-sm">

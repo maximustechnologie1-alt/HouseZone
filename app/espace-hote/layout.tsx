@@ -13,6 +13,7 @@ import {
 import { requireHost } from "@/lib/auth";
 import { HostMobileNav } from "@/components/host/host-mobile-nav";
 import { HostTopbar } from "@/components/host/host-topbar";
+import { LogoMark } from "@/components/ui/logo-mark";
 
 const NAV = [
   { href: "/espace-hote", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -33,9 +34,7 @@ export default async function HostLayout({ children }: LayoutProps<"/">) {
     <div className="flex min-h-screen bg-hz-sky/30">
       <aside className="hidden w-64 shrink-0 border-r border-hz-navy/10 bg-white p-5 lg:block">
         <Link href="/" className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-hz-navy text-hz-gold font-bold">
-            H
-          </span>
+          <LogoMark size={36} />
           <span className="text-lg font-semibold text-hz-navy">HouseZone</span>
         </Link>
         <nav className="mt-8 space-y-1">

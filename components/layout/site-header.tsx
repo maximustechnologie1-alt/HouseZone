@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { LinkButton } from "@/components/ui/button";
 import { initials } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
+import { LogoMark } from "@/components/ui/logo-mark";
 
 export async function SiteHeader() {
   const user = await getCurrentUser();
@@ -23,9 +24,7 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-hz-navy/10 bg-white/95 backdrop-blur">
       <div className="hz-container flex h-16 items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-hz-navy text-hz-gold font-bold">
-            H
-          </span>
+          <LogoMark size={36} />
           <span className="hidden text-lg font-semibold text-hz-navy sm:inline">HouseZone</span>
         </Link>
 
