@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { useMounted } from "@/lib/hooks/use-mounted";
 
 export function Modal({
   open,
@@ -15,6 +17,7 @@ export function Modal({
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const mounted = useMounted();
 
   useEffect(() => {
     if (!open) return;
@@ -25,11 +28,15 @@ export function Modal({
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  // Portaled to <body>: `position: fixed` here would otherwise be measured
+  // against the nearest ancestor with a `filter`/`backdrop-blur` (e.g. the
+  // sticky site header), which traps the modal inside that ancestor's box
+  // instead of covering the viewport.
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-hz-navy/40 p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[90] flex items-end justify-center bg-hz-navy/40 p-0 sm:items-center sm:p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -46,6 +53,7 @@ export function Modal({
         </div>
         <div className="mt-4">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -30,6 +31,7 @@ import {
   ScrollText,
 } from "lucide-react";
 import { signOutAction } from "@/lib/actions/auth";
+import { useMounted } from "@/lib/hooks/use-mounted";
 import { LogoMark } from "@/components/ui/logo-mark";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types/database";
@@ -64,6 +66,14 @@ function MenuSection({ title, links, onNavigate }: { title: string; links: MenuL
 
 export function MainMenu({ user, isHost }: { user: Profile | null; isHost: boolean }) {
   const [open, setOpen] = useState(false);
+  // The overlay/drawer are portaled to <body> (see return below) so their
+  // `position: fixed` is measured against the viewport rather than being
+  // trapped inside the header's box — any ancestor with a `filter` (our
+  // sticky header uses `backdrop-blur`) creates a new containing block for
+  // fixed descendants, which otherwise confines the drawer to the header's
+  // small height instead of covering the screen. Portals need `document`,
+  // which isn't available during SSR, hence the mounted gate.
+  const mounted = useMounted();
   const pathname = usePathname();
   const [lastPathname, setLastPathname] = useState(pathname);
 
@@ -152,60 +162,66 @@ export function MainMenu({ user, isHost }: { user: Profile | null; isHost: boole
         <Menu className="h-5.5 w-5.5" />
       </button>
 
-      <div
-        className={cn(
-          "fixed inset-0 z-50 bg-hz-navy/40 transition-opacity",
-          open ? "opacity-100" : "pointer-events-none opacity-0"
-        )}
-        onClick={close}
-        aria-hidden={!open}
-      />
+      {mounted &&
+        createPortal(
+          <>
+            <div
+              className={cn(
+                "fixed inset-0 z-[100] bg-hz-navy/40 transition-opacity",
+                open ? "opacity-100" : "pointer-events-none opacity-0"
+              )}
+              onClick={close}
+              aria-hidden={!open}
+            />
 
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Menu HouseZone"
-        className={cn(
-          "fixed inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col bg-white shadow-2xl transition-transform duration-300 ease-out",
-          open ? "translate-x-0" : "translate-x-full"
-        )}
-      >
-        <div className="flex items-center justify-between border-b border-hz-navy/10 px-4 py-4">
-          <Link href="/" onClick={close} className="flex items-center gap-2">
-            <LogoMark size={32} />
-            <span className="font-semibold text-hz-navy">HouseZone</span>
-          </Link>
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Fermer le menu"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-hz-navy hover:bg-hz-sky"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menu HouseZone"
+              className={cn(
+                "fixed inset-y-0 right-0 z-[101] flex w-full max-w-sm flex-col bg-white shadow-2xl transition-transform duration-300 ease-out",
+                open ? "translate-x-0" : "translate-x-full"
+              )}
+            >
+              <div className="flex items-center justify-between border-b border-hz-navy/10 px-4 py-4">
+                <Link href="/" onClick={close} className="flex items-center gap-2">
+                  <LogoMark size={32} />
+                  <span className="font-semibold text-hz-navy">HouseZone</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={close}
+                  aria-label="Fermer le menu"
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-hz-navy hover:bg-hz-sky"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-        <div className="flex-1 space-y-6 overflow-y-auto py-4">
-          <MenuSection title="Compte" links={compteLinks} onNavigate={close} />
-          <MenuSection title="Espace Hôte" links={espaceHoteLinks} onNavigate={close} />
-          <MenuSection title="Paramètres" links={parametresLinks} onNavigate={close} />
-          <MenuSection title="Aide" links={aideLinks} onNavigate={close} />
-          <MenuSection title="Légal" links={legalLinks} onNavigate={close} />
-        </div>
+              <div className="flex-1 space-y-6 overflow-y-auto py-4">
+                <MenuSection title="Compte" links={compteLinks} onNavigate={close} />
+                <MenuSection title="Espace Hôte" links={espaceHoteLinks} onNavigate={close} />
+                <MenuSection title="Paramètres" links={parametresLinks} onNavigate={close} />
+                <MenuSection title="Aide" links={aideLinks} onNavigate={close} />
+                <MenuSection title="Légal" links={legalLinks} onNavigate={close} />
+              </div>
 
-        {user && (
-          <div className="border-t border-hz-navy/10 p-4">
-            <form action={signOutAction}>
-              <button
-                type="submit"
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
-              >
-                <LogOut className="h-4.5 w-4.5" /> Déconnexion
-              </button>
-            </form>
-          </div>
+              {user && (
+                <div className="border-t border-hz-navy/10 p-4">
+                  <form action={signOutAction}>
+                    <button
+                      type="submit"
+                      className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
+                    >
+                      <LogOut className="h-4.5 w-4.5" /> Déconnexion
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
+          </>,
+          document.body
         )}
-      </div>
     </>
   );
 }

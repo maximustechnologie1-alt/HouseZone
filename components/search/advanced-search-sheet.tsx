@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { X, Search, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useMounted } from "@/lib/hooks/use-mounted";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/field";
 import type { City, Neighborhood, PropertyCategory } from "@/lib/types/database";
@@ -41,13 +43,14 @@ export function AdvancedSearchSheet({ open, onClose, cities, neighborhoods, cate
   const [furnished, setFurnished] = useState<string>("");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [featuredOnly, setFeaturedOnly] = useState(false);
+  const mounted = useMounted();
 
   const filteredNeighborhoods = useMemo(
     () => neighborhoods.filter((n) => n.city_id === cityId),
     [neighborhoods, cityId]
   );
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   function submit() {
     const params = new URLSearchParams();
@@ -65,8 +68,8 @@ export function AdvancedSearchSheet({ open, onClose, cities, neighborhoods, cate
     onClose();
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-hz-navy/40 sm:items-center sm:p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-hz-navy/40 sm:items-center sm:p-4">
       <div className="flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl bg-white sm:max-w-lg sm:rounded-card">
         <div className="flex items-center justify-between border-b border-hz-navy/10 px-5 py-4">
           <h2 className="text-lg font-semibold text-hz-navy">Recherche avancée</h2>
@@ -182,7 +185,8 @@ export function AdvancedSearchSheet({ open, onClose, cities, neighborhoods, cate
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
