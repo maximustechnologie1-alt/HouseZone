@@ -1,4 +1,5 @@
-import { Receipt } from "lucide-react";
+import Link from "next/link";
+import { FileClock, Receipt } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { StatusTabs } from "@/components/admin/status-tabs";
@@ -45,6 +46,10 @@ export default async function AdminSubscriptionsPage({ searchParams }: PageProps
   if (statut) query = query.eq("status", statut);
 
   const { data: subscriptions } = await query;
+  const { count: pendingRequests } = await supabase
+    .from("subscription_payment_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "PENDING");
   const { data: plans } = await supabase
     .from("subscription_plans")
     .select("*")
@@ -71,7 +76,21 @@ export default async function AdminSubscriptionsPage({ searchParams }: PageProps
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-hz-navy">Abonnements</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold text-hz-navy">Abonnements</h1>
+        <Link
+          href="/admin/abonnements/demandes"
+          className="flex items-center gap-2 rounded-full bg-hz-navy px-4 py-2 text-sm font-medium text-white"
+        >
+          <FileClock className="h-4 w-4" />
+          Demandes de paiement
+          {Boolean(pendingRequests) && (
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-hz-gold px-1 text-xs font-bold text-hz-navy">
+              {pendingRequests}
+            </span>
+          )}
+        </Link>
+      </div>
 
       <div className="mt-4">
         <StatusTabs basePath="/admin/abonnements" current={statut} tabs={TABS} />

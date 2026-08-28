@@ -28,6 +28,8 @@ export type SearchAlertStatus = "active" | "fermee" | "bloquee";
 export type SubscriptionStatus = "essai" | "actif" | "expire" | "suspendu" | "annule";
 export type PaymentMethod = "mobile_money" | "carte";
 export type PaymentStatus = "initie" | "en_attente" | "reussi" | "echoue" | "annule" | "rembourse";
+export type PaymentMethodType = "ORANGE_MONEY" | "MOOV_AFRICA" | "WAVE";
+export type SubscriptionPaymentRequestStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 export type BookingStatus = "en_attente" | "confirmee" | "annulee" | "terminee";
 export type ReportTargetType = "listing" | "user" | "message" | "search_alert";
 export type ReportStatus = "nouveau" | "en_analyse" | "traite" | "rejete" | "action_effectuee";
@@ -281,6 +283,46 @@ export interface Receipt {
   payment_id: string;
   receipt_number: string;
   generated_at: string;
+}
+
+export interface PaymentMethodConfig {
+  id: string;
+  method: PaymentMethodType;
+  display_name: string;
+  account_name: string;
+  account_number: string;
+  payment_reference: string;
+  payment_instructions: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  updated_by: string | null;
+}
+
+export interface SubscriptionPaymentRequest {
+  id: string;
+  user_id: string;
+  host_type: HostType;
+  subscription_plan_id: string | null;
+  plan_name: string;
+  duration_months: number;
+  amount: number;
+  payment_mode: string;
+  payment_method: PaymentMethodType;
+  payer_phone: string;
+  payment_proof_path: string;
+  comment: string | null;
+  status: SubscriptionPaymentRequestStatus;
+  payment_account_name: string;
+  payment_account_number: string;
+  payment_reference: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  rejection_reason: string | null;
+  subscription_id: string | null;
+  subscription_start: string | null;
+  subscription_end: string | null;
+  created_at: string;
 }
 
 export interface Booking {

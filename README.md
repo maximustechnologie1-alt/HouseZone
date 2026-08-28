@@ -54,9 +54,13 @@ proxy.ts            Middleware Next 16 : rafraîchit la session, protège
 
 ## Choix techniques V1
 
-- **Paiement** : confirmation manuelle (l'utilisateur transfère par Mobile Money puis
-  saisit une référence, un admin confirme depuis `/admin/paiements`). Architecture
-  pluggable dans `lib/payments/provider.ts` pour brancher CinetPay/PayDunya plus tard.
+- **Paiement** : abonnements payés par Mobile Money manuel (Orange Money, Moov Africa,
+  Wave). L'Hôte choisit une offre et un moyen, voit les coordonnées configurées par
+  l'admin (`/admin/parametres/paiements`, jamais codées en dur), transfère puis envoie
+  une preuve. La demande (`subscription_payment_requests`) reste `PENDING` jusqu'à
+  vérification manuelle par un admin depuis `/admin/abonnements/demandes` — voir
+  `lib/actions/subscription-payments.ts`. `payment_mode` est prévu pour brancher une
+  API automatique (CinetPay/PayDunya/Orange Money) plus tard sans refaire le système.
 - **Carte** : OpenStreetMap + Leaflet (gratuit, aucune clé API). `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
   reste disponible dans `.env.example` si vous préférez migrer vers Google Maps.
 - **OCR** : Tesseract.js côté serveur, remplaçable dans `lib/ocr/analyze.ts`.

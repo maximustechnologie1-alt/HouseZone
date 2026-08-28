@@ -1,12 +1,25 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import {
+  SUBSCRIPTION_PAYMENT_REQUEST_STATUS_LABELS,
+  SUBSCRIPTION_PAYMENT_REQUEST_STATUS_COLORS,
+} from "@/lib/constants";
 import type {
   UserStatus,
   VerificationStatus,
   PaymentStatus,
   SearchAlertStatus,
   SanctionType,
+  SubscriptionPaymentRequestStatus,
 } from "@/lib/types/database";
+
+export function SubscriptionPaymentRequestStatusBadge({ status }: { status: SubscriptionPaymentRequestStatus }) {
+  return (
+    <Badge className={SUBSCRIPTION_PAYMENT_REQUEST_STATUS_COLORS[status]}>
+      {SUBSCRIPTION_PAYMENT_REQUEST_STATUS_LABELS[status]}
+    </Badge>
+  );
+}
 
 export const USER_STATUS_LABELS: Record<UserStatus, string> = {
   active: "Actif",

@@ -14,6 +14,7 @@ import { requireHost } from "@/lib/auth";
 import { HostMobileNav } from "@/components/host/host-mobile-nav";
 import { HostTopbar } from "@/components/host/host-topbar";
 import { LogoMark } from "@/components/ui/logo-mark";
+import { getUnreadMessageCount } from "@/lib/data/messages";
 
 const NAV = [
   { href: "/espace-hote", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -29,6 +30,7 @@ const NAV = [
 
 export default async function HostLayout({ children }: LayoutProps<"/">) {
   const { profile, hostProfile } = await requireHost();
+  const unreadMessages = await getUnreadMessageCount(profile.id);
 
   return (
     <div className="flex min-h-screen bg-hz-sky/30">
@@ -42,9 +44,16 @@ export default async function HostLayout({ children }: LayoutProps<"/">) {
             <Link
               key={href}
               href={href}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-hz-ink/70 hover:bg-hz-sky hover:text-hz-navy"
+              className="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-hz-ink/70 hover:bg-hz-sky hover:text-hz-navy"
             >
-              <Icon className="h-4.5 w-4.5" /> {label}
+              <span className="flex items-center gap-3">
+                <Icon className="h-4.5 w-4.5" /> {label}
+              </span>
+              {href === "/espace-hote/messages" && unreadMessages > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-hz-gold px-1 text-[10px] font-bold text-hz-navy">
+                  {unreadMessages > 9 ? "9+" : unreadMessages}
+                </span>
+              )}
             </Link>
           ))}
         </nav>
@@ -53,7 +62,7 @@ export default async function HostLayout({ children }: LayoutProps<"/">) {
         <HostTopbar profile={profile} hostProfile={hostProfile} />
         <main className="p-4 pb-20 sm:p-6 lg:pb-6">{children}</main>
       </div>
-      <HostMobileNav />
+      <HostMobileNav unreadMessages={unreadMessages} />
     </div>
   );
 }

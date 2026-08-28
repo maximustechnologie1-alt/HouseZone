@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import { requireHost } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { getActivePaymentMethods } from "@/lib/data/payment-methods";
 import { formatPrice } from "@/lib/utils";
-import { PaymentForm } from "./payment-form";
+import { SubscriptionPaymentFlow } from "./subscription-payment-flow";
 
 export const metadata = { title: "Paiement de l'abonnement" };
 
@@ -15,7 +16,10 @@ export default async function SubscriptionPaymentPage({
   if (!planId || Array.isArray(planId)) notFound();
 
   const supabase = await createClient();
-  const { data: plan } = await supabase.from("subscription_plans").select("*").eq("id", planId).maybeSingle();
+  const [{ data: plan }, methods] = await Promise.all([
+    supabase.from("subscription_plans").select("*").eq("id", planId).maybeSingle(),
+    getActivePaymentMethods(),
+  ]);
   if (!plan) notFound();
 
   return (
@@ -29,12 +33,12 @@ export default async function SubscriptionPaymentPage({
       </div>
 
       <p className="mt-4 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-800">
-        Le paiement Mobile Money est confirmé manuellement par notre équipe HouseZone. Effectuez le transfert puis
-        indiquez la référence de transaction reçue par SMS ; votre abonnement sera activé après vérification.
+        Le paiement Mobile Money est vérifié manuellement par notre équipe. Votre abonnement est activé uniquement
+        après confirmation du transfert par un administrateur — jamais automatiquement.
       </p>
 
       <div className="mt-6 rounded-card border border-hz-navy/10 bg-white p-5">
-        <PaymentForm planId={plan.id} />
+        <SubscriptionPaymentFlow planId={plan.id} amount={plan.price} methods={methods} />
       </div>
     </div>
   );

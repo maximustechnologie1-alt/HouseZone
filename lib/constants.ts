@@ -1,4 +1,12 @@
-import type { HostType, ListingStatus, VisitStatus, SubscriptionStatus, ReportStatus } from "@/lib/types/database";
+import type {
+  HostType,
+  ListingStatus,
+  VisitStatus,
+  SubscriptionStatus,
+  ReportStatus,
+  PaymentMethodType,
+  SubscriptionPaymentRequestStatus,
+} from "@/lib/types/database";
 
 export const APP_NAME = "HouseZone";
 export const APP_TAGLINE = "Trouvez votre prochain bien.";
@@ -77,6 +85,52 @@ export const REPORT_REASONS = [
   "Tentative de contournement",
   "Contenu interdit",
 ] as const;
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethodType, string> = {
+  ORANGE_MONEY: "Orange Money",
+  MOOV_AFRICA: "Moov Africa",
+  WAVE: "Wave",
+};
+
+export const PAYMENT_METHOD_EMOJI: Record<PaymentMethodType, string> = {
+  ORANGE_MONEY: "🟠",
+  MOOV_AFRICA: "🟢",
+  WAVE: "🔵",
+};
+
+export const PAYMENT_METHOD_COLORS: Record<PaymentMethodType, string> = {
+  ORANGE_MONEY: "border-orange-300 bg-orange-50",
+  MOOV_AFRICA: "border-emerald-300 bg-emerald-50",
+  WAVE: "border-blue-300 bg-blue-50",
+};
+
+export const SUBSCRIPTION_PAYMENT_REQUEST_STATUS_LABELS: Record<SubscriptionPaymentRequestStatus, string> = {
+  PENDING: "En attente",
+  APPROVED: "Validée",
+  REJECTED: "Refusée",
+  CANCELLED: "Annulée",
+};
+
+export const SUBSCRIPTION_PAYMENT_REQUEST_STATUS_COLORS: Record<SubscriptionPaymentRequestStatus, string> = {
+  PENDING: "bg-amber-100 text-amber-700",
+  APPROVED: "bg-emerald-100 text-emerald-700",
+  REJECTED: "bg-red-100 text-red-700",
+  CANCELLED: "bg-zinc-100 text-zinc-500",
+};
+
+export const PAYMENT_REJECTION_REASONS = [
+  "Paiement non reçu",
+  "Montant incorrect",
+  "Capture illisible",
+  "Transaction invalide",
+  "Mauvais numéro",
+  "Preuve insuffisante",
+  "Autre",
+] as const;
+
+// Section 33 du cahier des charges : sans abonnement payant actif, un Hôte
+// est limité à ce nombre de publications par mois calendaire.
+export const FREE_TIER_MONTHLY_LISTING_LIMIT = 4;
 
 export const TRIAL_DURATION_DAYS = 3;
 

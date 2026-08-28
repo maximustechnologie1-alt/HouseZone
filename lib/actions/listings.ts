@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser, requireAdmin } from "@/lib/auth";
 import { listingSchema } from "@/lib/validations";
+import { FREE_TIER_MONTHLY_LISTING_LIMIT } from "@/lib/constants";
 import { analyzeListingImage } from "@/lib/ocr/analyze";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
@@ -44,6 +45,33 @@ export async function createListingAction(_prev: ActionState, formData: FormData
   }
 
   const supabase = await createClient();
+
+  // Section 33 : sans abonnement payant actif, un Hôte est limité à
+  // FREE_TIER_MONTHLY_LISTING_LIMIT publications par mois calendaire ; un
+  // abonnement "actif" (payé, hors essai) débloque les publications illimitées.
+  const { data: activeSubscription } = await supabase
+    .from("subscriptions")
+    .select("id")
+    .eq("host_id", user.id)
+    .eq("status", "actif")
+    .gt("end_date", new Date().toISOString())
+    .maybeSingle();
+
+  if (!activeSubscription) {
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+    const { count } = await supabase
+      .from("listings")
+      .select("id", { count: "exact", head: true })
+      .eq("host_id", user.id)
+      .gte("created_at", startOfMonth);
+
+    if ((count ?? 0) >= FREE_TIER_MONTHLY_LISTING_LIMIT) {
+      return {
+        error: `Vous avez atteint la limite de ${FREE_TIER_MONTHLY_LISTING_LIMIT} publications ce mois-ci. Souscrivez à un abonnement pour publier sans limite.`,
+      };
+    }
+  }
+
   const { data: listing, error } = await supabase
     .from("listings")
     .insert({

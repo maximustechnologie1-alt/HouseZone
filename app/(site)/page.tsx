@@ -1,105 +1,158 @@
 import Link from "next/link";
-import { Search, ShieldCheck, MapPin, MessageCircleMore } from "lucide-react";
-import { QUICK_CATEGORIES } from "@/lib/constants";
+import { ShieldCheck, MapPin as MapPinIcon, MessageCircleMore, Home as HomeIcon } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
-import { getFeaturedListings, getUserFavoriteIds } from "@/lib/data/listings";
-import { PropertyCard, EmptyState } from "@/components/listings/property-card";
-import { Home as HomeIcon } from "lucide-react";
+import {
+  getFeaturedListings,
+  getUserFavoriteIds,
+  getTopFeaturedListings,
+  getListingsByCategorySlugs,
+} from "@/lib/data/listings";
+import { getCities, getNeighborhoods, getCategories } from "@/lib/data/taxonomies";
+import { EmptyState } from "@/components/listings/property-card";
+import { HeroSearchBar } from "@/components/home/hero-search-bar";
+import { CategoryScroller } from "@/components/home/category-scroller";
+import { FeaturedCarousel } from "@/components/home/featured-carousel";
+import { VerticalSection } from "@/components/home/vertical-section";
+import { NearbySection } from "@/components/home/nearby-section";
 
 export default async function HomePage() {
   const user = await getCurrentUser();
-  const [listings, favoriteIds] = await Promise.all([
-    getFeaturedListings(8),
+
+  const [cities, neighborhoods, categories] = await Promise.all([
+    getCities(),
+    getNeighborhoods(),
+    getCategories(),
+  ]);
+
+  const [featured, recent, residences, appartements, meubles, villas, favoriteIds] = await Promise.all([
+    getTopFeaturedListings(10),
+    getFeaturedListings(6),
+    getListingsByCategorySlugs(["residence", "residence-meublee"], 4),
+    getListingsByCategorySlugs(["appartement", "appartement-meuble"], 4),
+    getListingsByCategorySlugs(["appartement-meuble", "residence-meublee"], 4),
+    getListingsByCategorySlugs(["villa", "mini-villa"], 4),
     user ? getUserFavoriteIds(user.id) : Promise.resolve(new Set<string>()),
   ]);
 
+  const nothingPublished =
+    featured.length === 0 &&
+    recent.length === 0 &&
+    residences.length === 0 &&
+    appartements.length === 0 &&
+    meubles.length === 0 &&
+    villas.length === 0;
+
   return (
     <div>
-      <section className="bg-hz-navy py-14 text-white sm:py-20">
+      <section className="bg-hz-navy pb-8 pt-6 sm:pb-12 sm:pt-10">
         <div className="hz-container">
-          <h1 className="max-w-2xl text-3xl font-bold leading-tight sm:text-5xl">
+          <p className="mb-4 text-lg font-semibold text-white sm:text-2xl">
             Trouvez votre <span className="text-hz-gold">prochain bien</span>.
-          </h1>
-          <p className="mt-4 max-w-xl text-hz-sky/90">
-            Recherchez, vérifiez et visitez un bien immobilier au Burkina Faso — en toute confiance.
           </p>
+          <HeroSearchBar cities={cities} neighborhoods={neighborhoods} categories={categories} />
+        </div>
+      </section>
 
-          <form action="/recherche" className="mt-8 max-w-2xl rounded-2xl bg-white p-2 shadow-lg sm:flex sm:gap-2">
-            <div className="flex items-center gap-2 px-3 py-2">
-              <Search className="h-5 w-5 shrink-0 text-hz-ink/40" />
-              <input
-                name="q"
-                placeholder="Que recherchez-vous ? (villa, appartement, quartier...)"
-                className="w-full text-sm text-hz-ink outline-none placeholder:text-hz-ink/40"
-              />
-            </div>
-            <button
-              type="submit"
-              className="mt-2 w-full rounded-xl bg-hz-blue px-6 py-3 text-sm font-semibold text-white sm:mt-0 sm:w-auto"
-            >
-              Rechercher
-            </button>
-          </form>
+      <section className="hz-container -mt-2 py-6">
+        <CategoryScroller categories={categories} />
+      </section>
 
-          <div className="mt-6 flex flex-wrap gap-2">
-            {QUICK_CATEGORIES.map((c) => (
-              <Link
-                key={c.slug}
-                href={`/recherche?categorie=${c.slug}`}
-                className="rounded-full border border-white/20 px-4 py-1.5 text-sm text-white/90 hover:bg-white/10"
-              >
-                {c.label}
+      {nothingPublished ? (
+        <section className="hz-container py-8">
+          <EmptyState
+            icon={HomeIcon}
+            title="Aucun bien publié pour l'instant"
+            description="Dès qu'un Hôte publie une annonce validée, elle apparaît ici."
+          />
+        </section>
+      ) : (
+        <>
+          <section className="hz-container py-6">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold text-hz-navy">Top résidences &amp; appartements à la une</h2>
+                <p className="mt-1 text-sm text-hz-ink/60">Découvrez les biens les plus remarqués sur HouseZone</p>
+              </div>
+              <Link href="/recherche?une=1" className="shrink-0 text-sm font-medium text-hz-blue">
+                Voir tout →
               </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="hz-container py-10">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Feature icon={ShieldCheck} title="Hôtes vérifiés" text="Un badge signale les professionnels contrôlés par HouseZone." />
-          <Feature icon={MapPin} title="Recherche locale" text="Villes et quartiers du Burkina Faso, filtres précis." />
-          <Feature icon={MessageCircleMore} title="Messagerie sécurisée" text="Échangez et organisez vos visites sans quitter la plateforme." />
-        </div>
-      </section>
-
-      <section className="hz-container py-10">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-hz-navy">Biens récents</h2>
-          <Link href="/recherche" className="text-sm font-medium text-hz-blue">
-            Voir tout
-          </Link>
-        </div>
-        <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {listings.length === 0 ? (
-            <div className="col-span-full">
-              <EmptyState
-                icon={HomeIcon}
-                title="Aucun bien publié pour l'instant"
-                description="Dès qu'un Hôte publie une annonce validée, elle apparaît ici."
-              />
             </div>
-          ) : (
-            listings.map((listing) => (
-              <PropertyCard key={listing.id} listing={listing} isFavorite={favoriteIds.has(listing.id)} />
-            ))
-          )}
+            <div className="mt-5">
+              <FeaturedCarousel listings={featured} favoriteIds={favoriteIds} />
+            </div>
+          </section>
+
+          <VerticalSection
+            title="Nouvelles annonces"
+            seeAllHref="/recherche"
+            listings={recent}
+            favoriteIds={favoriteIds}
+          />
+
+          <NearbySection favoriteIds={favoriteIds} />
+
+          <VerticalSection
+            title="Résidences"
+            seeAllHref="/recherche?categorie=residence"
+            listings={residences}
+            favoriteIds={favoriteIds}
+          />
+
+          <VerticalSection
+            title="Appartements"
+            seeAllHref="/recherche?categorie=appartement"
+            listings={appartements}
+            favoriteIds={favoriteIds}
+          />
+
+          <VerticalSection
+            title="Appartements meublés"
+            seeAllHref="/recherche?meuble=1"
+            listings={meubles}
+            favoriteIds={favoriteIds}
+          />
+
+          <VerticalSection
+            title="Villas"
+            seeAllHref="/recherche?categorie=villa"
+            listings={villas}
+            favoriteIds={favoriteIds}
+          />
+        </>
+      )}
+
+      <section className="hz-container py-8">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Feature
+            icon={ShieldCheck}
+            title="Hôtes vérifiés"
+            text="Un badge signale les professionnels contrôlés par HouseZone."
+          />
+          <Feature icon={MapPinIcon} title="Recherche locale" text="Villes et quartiers du Burkina Faso, filtres précis." />
+          <Feature
+            icon={MessageCircleMore}
+            title="Messagerie sécurisée"
+            text="Échangez et organisez vos visites sans quitter la plateforme."
+          />
         </div>
       </section>
 
-      <section className="hz-container py-10">
-        <div className="rounded-card bg-hz-sky p-8 sm:p-12">
-          <h2 className="text-xl font-semibold text-hz-navy sm:text-2xl">Vous êtes propriétaire, agence ou démarcheur ?</h2>
-          <p className="mt-2 max-w-xl text-sm text-hz-ink/70">
-            Publiez vos biens, gérez vos visites et suivez vos statistiques depuis votre espace Hôte. 3 jours
-            d&apos;essai gratuit à l&apos;activation.
-          </p>
-          <Link
-            href="/devenir-hote"
-            className="mt-5 inline-flex rounded-full bg-hz-navy px-6 py-3 text-sm font-semibold text-white"
-          >
-            Devenir Hôte
-          </Link>
+      <section className="hz-container pb-10">
+        <div className="rounded-card bg-hz-sky p-6 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="font-semibold text-hz-navy">Propriétaire, agence ou démarcheur ?</h2>
+              <p className="mt-1 max-w-md text-sm text-hz-ink/70">
+                Publiez vos biens et gérez vos visites depuis votre espace Hôte. 3 jours d&apos;essai gratuit.
+              </p>
+            </div>
+            <Link
+              href="/devenir-hote"
+              className="shrink-0 rounded-full bg-hz-navy px-5 py-2.5 text-sm font-semibold text-white"
+            >
+              Devenir Hôte
+            </Link>
+          </div>
         </div>
       </section>
     </div>

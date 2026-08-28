@@ -22,6 +22,11 @@ export function SiteFooter() {
             <Link href="/profil/parametres">Paramètres</Link>
           </div>
           <div className="flex flex-col gap-2">
+            <span className="font-medium text-white">Aide</span>
+            <Link href="/aide">Centre d&apos;aide</Link>
+            <Link href="/aide#contact">Nous contacter</Link>
+          </div>
+          <div className="flex flex-col gap-2">
             <span className="font-medium text-white">Légal</span>
             <Link href="/conditions-utilisation">Conditions d&apos;utilisation</Link>
             <Link href="/confidentialite">Confidentialité</Link>

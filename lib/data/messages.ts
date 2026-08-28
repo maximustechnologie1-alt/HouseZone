@@ -73,3 +73,26 @@ export async function getMessages(conversationId: string): Promise<MessageRow[]>
     .order("created_at", { ascending: true });
   return (data ?? []) as unknown as MessageRow[];
 }
+
+// Utilisé pour le badge "Messages" de la navigation (section 10 du cahier
+// des charges UX) — compte les messages non lus reçus dans toutes les
+// conversations où l'utilisateur est participant, quel que soit son rôle.
+export async function getUnreadMessageCount(userId: string): Promise<number> {
+  const supabase = await createClient();
+  const { data: conversations } = await supabase
+    .from("conversations")
+    .select("id")
+    .or(`client_id.eq.${userId},host_id.eq.${userId}`);
+
+  const conversationIds = (conversations ?? []).map((c) => c.id);
+  if (conversationIds.length === 0) return 0;
+
+  const { count } = await supabase
+    .from("messages")
+    .select("id", { count: "exact", head: true })
+    .in("conversation_id", conversationIds)
+    .neq("sender_id", userId)
+    .is("read_at", null);
+
+  return count ?? 0;
+}

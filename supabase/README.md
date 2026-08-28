@@ -6,6 +6,9 @@
 2. Dans **SQL Editor**, exécute dans l'ordre :
    - `migrations/0001_init.sql` — tables, enums, triggers, RLS
    - `migrations/0002_storage.sql` — buckets de stockage + policies
+   - `migrations/0003_manual_payments.sql` — moyens de paiement Mobile Money
+     configurables (`payment_methods`) et demandes d'abonnement
+     (`subscription_payment_requests`), bucket `payment-proofs`
 3. Copie `.env.example` vers `.env.local` à la racine du projet et renseigne :
    - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Project Settings → API)
    - `SUPABASE_SERVICE_ROLE_KEY` (idem, **jamais** exposée au navigateur)

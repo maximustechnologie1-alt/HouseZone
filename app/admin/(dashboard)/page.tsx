@@ -27,6 +27,7 @@ export default async function AdminDashboardPage() {
     { data: monthlyPayments },
     { count: pendingHostRequests },
     { count: openReports },
+    { count: pendingPaymentRequests },
     { data: recentHostRequests },
     { data: recentReports },
   ] = await Promise.all([
@@ -41,6 +42,7 @@ export default async function AdminDashboardPage() {
     supabase.from("payments").select("amount").eq("status", "reussi").gte("created_at", startOfMonth),
     supabase.from("host_profiles").select("id", { count: "exact", head: true }).eq("verification_status", "en_cours"),
     supabase.from("reports").select("id", { count: "exact", head: true }).eq("status", "nouveau"),
+    supabase.from("subscription_payment_requests").select("id", { count: "exact", head: true }).eq("status", "PENDING"),
     supabase
       .from("host_profiles")
       .select("id, host_type, submitted_at, profiles!host_profiles_user_id_fkey ( first_name, last_name )")
@@ -96,6 +98,9 @@ export default async function AdminDashboardPage() {
         />
         <StatCard label="Demandes Hôte en attente" value={pendingHostRequests ?? 0} />
         <StatCard label="Signalements ouverts" value={openReports ?? 0} />
+        <Link href="/admin/abonnements/demandes">
+          <StatCard label="Demandes de paiement" value={pendingPaymentRequests ?? 0} hint="En attente de vérification" />
+        </Link>
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">

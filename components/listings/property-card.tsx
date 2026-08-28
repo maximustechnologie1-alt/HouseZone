@@ -9,13 +9,14 @@ import { FavoriteButton } from "@/components/listings/favorite-button";
 
 export interface PropertyCardData extends Pick<
   Listing,
-  "id" | "title" | "price" | "operation_type" | "status" | "bedrooms" | "furnished"
+  "id" | "title" | "price" | "operation_type" | "status" | "bedrooms" | "bathrooms" | "furnished"
 > {
   cityName?: string;
   neighborhoodName?: string;
   categoryName?: string;
   imageUrl?: string | null;
   hostVerified?: boolean;
+  featured?: boolean;
 }
 
 export function PropertyCard({
@@ -51,6 +52,11 @@ export function PropertyCard({
               {LISTING_STATUS_LABELS[listing.status]}
             </span>
           )}
+          {!showStatus && listing.featured && (
+            <span className="absolute left-3 top-3 rounded-full bg-hz-gold px-2.5 py-1 text-xs font-bold text-hz-navy">
+              À LA UNE
+            </span>
+          )}
           <div className="absolute right-3 top-3">
             <FavoriteButton listingId={listing.id} initialFavorite={isFavorite} />
           </div>
@@ -75,6 +81,7 @@ export function PropertyCard({
             {listing.bedrooms ? (
               <span className="flex items-center gap-1">
                 <Bed className="h-3.5 w-3.5" /> {listing.bedrooms}
+                {listing.bathrooms ? ` · ${listing.bathrooms} sdb` : ""}
               </span>
             ) : null}
           </div>

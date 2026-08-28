@@ -28,6 +28,9 @@ export default async function SearchPage({ searchParams }: PageProps<"/recherche
     minPrice: params.prixMin ? Number(params.prixMin) : undefined,
     maxPrice: params.prixMax ? Number(params.prixMax) : undefined,
     bedrooms: params.chambres ? Number(params.chambres) : undefined,
+    furnished: params.meuble === "1" ? true : params.meuble === "0" ? false : undefined,
+    verifiedHostOnly: params.verifie === "1" ? true : undefined,
+    featuredOnly: params.une === "1" ? true : undefined,
     page,
   });
 
