@@ -1,7 +1,7 @@
 import { CreditCard } from "lucide-react";
 import { requireHost } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { EmptyState } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { PaymentStatus } from "@/lib/types/database";

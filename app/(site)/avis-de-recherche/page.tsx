@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ClipboardList, Plus } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { EmptyState } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { LinkButton } from "@/components/ui/button";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { AlertActions } from "./alert-actions";

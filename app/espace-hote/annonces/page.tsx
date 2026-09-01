@@ -4,7 +4,7 @@ import { Building2, Eye, Heart, Plus } from "lucide-react";
 import { requireHost } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { publicListingImageUrl } from "@/lib/data/listings";
-import { EmptyState } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { LinkButton } from "@/components/ui/button";
 import { LISTING_STATUS_COLORS, LISTING_STATUS_LABELS } from "@/lib/constants";
 import { formatPrice } from "@/lib/utils";

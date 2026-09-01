@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
-import { EmptyState } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { relativeTime } from "@/lib/utils";
 import type { ConversationListRow } from "@/lib/data/messages";
 

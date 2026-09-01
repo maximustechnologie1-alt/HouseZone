@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { UserStatusBadge } from "@/components/admin/status-badges";
 import { UserStatusActions } from "@/components/admin/user-status-actions";
-import { EmptyState } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatDate } from "@/lib/utils";
 import type { Profile } from "@/lib/types/database";
 

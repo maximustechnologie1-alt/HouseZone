@@ -5,53 +5,56 @@ import { useActionState } from "react";
 import { signUpAction, type ActionState } from "@/lib/actions/auth";
 import { FormField, Input, FormError } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n/context";
+import type { TranslationKey } from "@/lib/i18n/types";
 
 const initialState: ActionState = {};
 
 export default function SignUpPage() {
   const [state, formAction, pending] = useActionState(signUpAction, initialState);
+  const { t } = useI18n();
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-hz-navy">Créer un compte</h1>
-      <p className="mt-1 text-sm text-hz-ink/60">Rejoignez HouseZone en quelques secondes.</p>
+      <h1 className="text-xl font-semibold text-hz-navy">{t("auth.signup_title")}</h1>
+      <p className="mt-1 text-sm text-hz-ink/60">{t("auth.signup_subtitle")}</p>
 
       <form action={formAction} className="mt-6 space-y-4">
-        <FormError message={state.error} />
+        <FormError message={state.error ? t(state.error as TranslationKey) : undefined} />
         <div className="grid grid-cols-2 gap-3">
-          <FormField label="Prénom" htmlFor="firstName">
+          <FormField label={t("auth.first_name_label")} htmlFor="firstName">
             <Input id="firstName" name="firstName" required autoComplete="given-name" />
           </FormField>
-          <FormField label="Nom" htmlFor="lastName">
+          <FormField label={t("auth.last_name_label")} htmlFor="lastName">
             <Input id="lastName" name="lastName" required autoComplete="family-name" />
           </FormField>
         </div>
-        <FormField label="Téléphone" htmlFor="phone">
-          <Input id="phone" name="phone" type="tel" required placeholder="70 00 00 00" autoComplete="tel" />
+        <FormField label={t("auth.phone_label")} htmlFor="phone">
+          <Input id="phone" name="phone" type="tel" required placeholder={t("auth.phone_placeholder")} autoComplete="tel" />
         </FormField>
-        <FormField label="Email" htmlFor="email">
+        <FormField label={t("auth.email_label")} htmlFor="email">
           <Input id="email" name="email" type="email" required autoComplete="email" />
         </FormField>
-        <FormField label="Mot de passe" htmlFor="password" hint="8 caractères minimum">
+        <FormField label={t("auth.password_label")} htmlFor="password" hint={t("auth.password_hint")}>
           <Input id="password" name="password" type="password" required autoComplete="new-password" />
         </FormField>
         <label className="flex items-start gap-2 text-xs text-hz-ink/70">
           <input type="checkbox" name="acceptTerms" required className="mt-0.5" />
-          J&apos;accepte les{" "}
+          {t("auth.accept_terms_prefix")}{" "}
           <Link href="/conditions-utilisation" className="font-medium text-hz-blue">
-            conditions d&apos;utilisation
+            {t("auth.terms_link")}
           </Link>{" "}
-          de HouseZone.
+          {t("auth.accept_terms_suffix")}
         </label>
         <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Création..." : "Créer mon compte"}
+          {pending ? t("auth.creating_account") : t("auth.create_account_cta")}
         </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-hz-ink/60">
-        Déjà inscrit ?{" "}
+        {t("auth.already_registered")}{" "}
         <Link href="/connexion" className="font-medium text-hz-blue">
-          Se connecter
+          {t("auth.sign_in_link")}
         </Link>
       </p>
     </div>

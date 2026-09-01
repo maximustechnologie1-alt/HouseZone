@@ -6,9 +6,10 @@ import {
   getUserFavoriteIds,
   getTopFeaturedListings,
   getListingsByCategorySlugs,
+  getListingsByCategory,
 } from "@/lib/data/listings";
 import { getCities, getNeighborhoods, getCategories } from "@/lib/data/taxonomies";
-import { EmptyState } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { HeroSearchBar } from "@/components/home/hero-search-bar";
 import { CategoryScroller } from "@/components/home/category-scroller";
 import { FeaturedCarousel } from "@/components/home/featured-carousel";
@@ -24,13 +25,14 @@ export default async function HomePage() {
     getCategories(),
   ]);
 
-  const [featured, recent, residences, appartements, meubles, villas, favoriteIds] = await Promise.all([
+  const [featured, recent, residences, appartements, meubles, villas, terrains, favoriteIds] = await Promise.all([
     getTopFeaturedListings(10),
     getFeaturedListings(6),
     getListingsByCategorySlugs(["residence", "residence-meublee"], 4),
     getListingsByCategorySlugs(["appartement", "appartement-meuble"], 4),
     getListingsByCategorySlugs(["appartement-meuble", "residence-meublee"], 4),
     getListingsByCategorySlugs(["villa", "mini-villa"], 4),
+    getListingsByCategory("terrain", 4),
     user ? getUserFavoriteIds(user.id) : Promise.resolve(new Set<string>()),
   ]);
 
@@ -40,25 +42,26 @@ export default async function HomePage() {
     residences.length === 0 &&
     appartements.length === 0 &&
     meubles.length === 0 &&
-    villas.length === 0;
+    villas.length === 0 &&
+    terrains.length === 0;
 
   return (
     <div>
-      <section className="bg-hz-navy pb-8 pt-6 sm:pb-12 sm:pt-10">
+      <section className="bg-hz-navy pb-6 pt-5 sm:pb-12 sm:pt-10">
         <div className="hz-container">
-          <p className="mb-4 text-lg font-semibold text-white sm:text-2xl">
+          <p className="mb-4 text-balance text-lg font-semibold leading-snug text-white sm:text-2xl">
             Trouvez votre <span className="text-hz-gold">prochain bien</span>.
           </p>
           <HeroSearchBar cities={cities} neighborhoods={neighborhoods} categories={categories} />
         </div>
       </section>
 
-      <section className="hz-container -mt-2 py-6">
+      <section className="hz-container -mt-2 py-4 sm:py-6">
         <CategoryScroller categories={categories} />
       </section>
 
       {nothingPublished ? (
-        <section className="hz-container py-8">
+        <section className="hz-container py-4 sm:py-8">
           <EmptyState
             icon={HomeIcon}
             title="Aucun bien publié pour l'instant"
@@ -116,6 +119,13 @@ export default async function HomePage() {
             title="Villas"
             seeAllHref="/recherche?categorie=villa"
             listings={villas}
+            favoriteIds={favoriteIds}
+          />
+
+          <VerticalSection
+            title="Terrains"
+            seeAllHref="/recherche?categorie=terrain"
+            listings={terrains}
             favoriteIds={favoriteIds}
           />
         </>

@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendPushToUser } from "@/lib/notifications/push";
 import type { NotificationType } from "@/lib/types/database";
 
 // Deliberately NOT a Server Action (no "use server" in this file): it's an
@@ -23,4 +24,6 @@ export async function createNotification(input: {
     body: input.body,
     link: input.link,
   });
+
+  await sendPushToUser(input.userId, { title: input.title, body: input.body, url: input.link });
 }

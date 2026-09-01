@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { StatusTabs } from "@/components/admin/status-tabs";
 import { Badge } from "@/components/ui/badge";
 import { ReportActions } from "@/components/admin/report-actions";
-import { EmptyState } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { REPORT_STATUS_LABELS } from "@/lib/constants";
 import { formatDateTime } from "@/lib/utils";
 import type { ReportStatus, ReportTargetType } from "@/lib/types/database";
@@ -114,7 +114,12 @@ export default async function AdminReportsPage({ searchParams }: PageProps<"/adm
                     </td>
                     <td className="px-4 py-3 text-hz-ink/60">{formatDateTime(r.created_at)}</td>
                     <td className="px-4 py-3">
-                      <ReportActions reportId={r.id} adminId={admin.id} />
+                      <ReportActions
+                        reportId={r.id}
+                        adminId={admin.id}
+                        targetType={r.target_type}
+                        targetId={r.target_id}
+                      />
                     </td>
                   </tr>
                 );

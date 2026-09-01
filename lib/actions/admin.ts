@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
 import { requireAdmin } from "@/lib/auth";
-import type { ReportStatus, SanctionType, UserStatus } from "@/lib/types/database";
+import type { ReportStatus, RiskLevel, SanctionType, UserStatus } from "@/lib/types/database";
 
 // Every export in this file is a Server Action and therefore reachable by a
 // direct POST request, not just from the admin UI. `requireAdmin()` is the
@@ -37,6 +37,27 @@ export async function updateUserStatusAction(userId: string, adminId: string, st
   });
 
   revalidatePath("/admin/utilisateurs");
+}
+
+// Le niveau de risque n'est jamais calculé finement (voir lib/moderation/risk.ts
+// pour l'escalade automatique légère) : l'admin garde toujours la main pour
+// corriger ou surclasser manuellement (section 33 du CDC).
+export async function updateRiskLevelAction(userId: string, adminId: string, riskLevel: RiskLevel) {
+  adminId = (await requireAdmin()).id;
+
+  const admin = createAdminClient();
+  await admin.from("profiles").update({ risk_level: riskLevel }).eq("id", userId);
+
+  await admin.from("audit_logs").insert({
+    admin_id: adminId,
+    action: "risk_level_updated",
+    target_type: "user",
+    target_id: userId,
+    target_user_id: userId,
+    metadata: { risk_level: riskLevel },
+  });
+
+  revalidatePath(`/admin/utilisateurs/${userId}`);
 }
 
 export async function toggleHostBadgeAction(hostProfileId: string, adminId: string, badgeVerified: boolean) {
@@ -73,6 +94,79 @@ export async function toggleHostBadgeAction(hostProfileId: string, adminId: stri
   revalidatePath("/admin/hotes");
 }
 
+export async function suspendHostAction(hostProfileId: string, adminId: string, reason?: string) {
+  adminId = (await requireAdmin()).id;
+
+  const admin = createAdminClient();
+  const { data: hostProfile } = await admin
+    .from("host_profiles")
+    .select("user_id")
+    .eq("id", hostProfileId)
+    .single();
+  if (!hostProfile) return;
+
+  await admin
+    .from("host_profiles")
+    .update({ verification_status: "suspendu", verification_reason: reason || null })
+    .eq("id", hostProfileId);
+
+  await admin.from("audit_logs").insert({
+    admin_id: adminId,
+    action: "host_status_suspended",
+    target_type: "host_profile",
+    target_id: hostProfileId,
+    target_user_id: hostProfile.user_id,
+    reason,
+  });
+
+  await createNotification({
+    userId: hostProfile.user_id,
+    type: "systeme",
+    title: "Statut Hôte suspendu",
+    body: reason || "Votre statut Hôte a été suspendu par l'administration HouseZone.",
+    link: "/devenir-hote",
+  });
+
+  revalidatePath("/admin/hotes");
+  revalidatePath(`/admin/hotes/${hostProfileId}`);
+}
+
+export async function reactivateHostAction(hostProfileId: string, adminId: string) {
+  adminId = (await requireAdmin()).id;
+
+  const admin = createAdminClient();
+  const { data: hostProfile } = await admin
+    .from("host_profiles")
+    .select("user_id")
+    .eq("id", hostProfileId)
+    .single();
+  if (!hostProfile) return;
+
+  await admin
+    .from("host_profiles")
+    .update({ verification_status: "accepte", verification_reason: null })
+    .eq("id", hostProfileId);
+
+  await admin.from("audit_logs").insert({
+    admin_id: adminId,
+    action: "host_status_reactivated",
+    target_type: "host_profile",
+    target_id: hostProfileId,
+    target_user_id: hostProfile.user_id,
+  });
+
+  await createNotification({
+    userId: hostProfile.user_id,
+    type: "systeme",
+    title: "Statut Hôte réactivé",
+    body: "Votre statut Hôte a été réactivé, vous retrouvez l'accès à votre espace professionnel.",
+    link: "/espace-hote",
+  });
+
+  revalidatePath("/admin/hotes");
+  revalidatePath(`/admin/hotes/${hostProfileId}`);
+}
+
 export async function resolveReportAction(
   reportId: string,
   adminId: string,
@@ -96,6 +190,22 @@ export async function resolveReportAction(
   });
 
   revalidatePath("/admin/signalements");
+}
+
+// Section 52 du CDC : clore un signalement "action_effectuee" doit pouvoir
+// déclencher la sanction elle-même en un clic, plutôt que d'obliger l'admin
+// à naviguer séparément vers la fiche utilisateur pour l'appliquer.
+export async function sanctionReportedUserAction(
+  reportId: string,
+  targetUserId: string,
+  adminId: string,
+  status: "suspended" | "banned",
+  reason?: string
+) {
+  adminId = (await requireAdmin()).id;
+
+  await updateUserStatusAction(targetUserId, adminId, status, reason || "Sanction suite à un signalement");
+  await resolveReportAction(reportId, adminId, "action_effectuee", reason);
 }
 
 export async function closeSearchAlertAsAdminAction(alertId: string, adminId: string) {

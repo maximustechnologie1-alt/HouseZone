@@ -1,27 +1,27 @@
 import { z } from "zod";
 
 export const signUpSchema = z.object({
-  firstName: z.string().min(2, "Prénom trop court"),
-  lastName: z.string().min(2, "Nom trop court"),
-  phone: z.string().min(8, "Numéro de téléphone invalide"),
-  email: z.email("Email invalide"),
-  password: z.string().min(8, "8 caractères minimum"),
+  firstName: z.string().min(2, "auth.first_name_too_short"),
+  lastName: z.string().min(2, "auth.last_name_too_short"),
+  phone: z.string().min(8, "auth.invalid_phone"),
+  email: z.email("auth.invalid_email"),
+  password: z.string().min(8, "auth.password_too_short"),
   acceptTerms: z
     .string()
-    .refine((v) => v === "on", { message: "Vous devez accepter les conditions d'utilisation" }),
+    .refine((v) => v === "on", { message: "auth.must_accept_terms" }),
 });
 
 export const signInSchema = z.object({
-  email: z.email("Email invalide"),
-  password: z.string().min(1, "Mot de passe requis"),
+  email: z.email("auth.invalid_email"),
+  password: z.string().min(1, "auth.password_required"),
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.email("Email invalide"),
+  email: z.email("auth.invalid_email"),
 });
 
 export const resetPasswordSchema = z.object({
-  password: z.string().min(8, "8 caractères minimum"),
+  password: z.string().min(8, "auth.password_too_short"),
 });
 
 export const hostApplicationSchema = z.object({
@@ -72,9 +72,9 @@ export const reportSchema = z.object({
 });
 
 export const profileSchema = z.object({
-  firstName: z.string().min(2),
-  lastName: z.string().min(2),
-  phone: z.string().min(8),
+  firstName: z.string().min(2, "auth.first_name_too_short"),
+  lastName: z.string().min(2, "auth.last_name_too_short"),
+  phone: z.string().min(8, "auth.invalid_phone"),
   language: z.string().min(2),
 });
 

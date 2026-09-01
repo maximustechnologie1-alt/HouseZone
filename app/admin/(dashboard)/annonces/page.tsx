@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { StatusTabs } from "@/components/admin/status-tabs";
 import { Badge } from "@/components/ui/badge";
 import { ListingModerationActions } from "@/components/admin/listing-moderation-actions";
-import { EmptyState } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { LISTING_STATUS_COLORS, LISTING_STATUS_LABELS } from "@/lib/constants";
 import { formatDate, formatPrice } from "@/lib/utils";
 import type { ListingStatus } from "@/lib/types/database";
@@ -102,7 +102,7 @@ export default async function AdminListingsPage({ searchParams }: PageProps<"/ad
                     <td className="px-4 py-3 text-hz-ink/60">{formatDate(l.created_at)}</td>
                     {needsAction && (
                       <td className="px-4 py-3">
-                        <ListingModerationActions listingId={l.id} adminId={admin.id} />
+                        <ListingModerationActions listingId={l.id} adminId={admin.id} status={l.status} />
                       </td>
                     )}
                   </tr>

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { reportSchema } from "@/lib/validations";
+import { maybeEscalateRisk, maybeEscalateRiskForListing } from "@/lib/moderation/risk";
 
 export interface ActionState {
   error?: string;
@@ -26,5 +27,12 @@ export async function createReportAction(_prev: ActionState, formData: FormData)
   });
 
   if (error) return { error: "Impossible d'envoyer le signalement." };
+
+  if (parsed.data.targetType === "user") {
+    await maybeEscalateRisk(parsed.data.targetId, "Cumul de signalements utilisateur");
+  } else if (parsed.data.targetType === "listing") {
+    await maybeEscalateRiskForListing(parsed.data.targetId, "Cumul de signalements sur des annonces");
+  }
+
   return { success: "Merci, votre signalement a été transmis à notre équipe de modération." };
 }

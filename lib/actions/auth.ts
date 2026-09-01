@@ -12,7 +12,7 @@ export interface ActionState {
 export async function signUpAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = signUpSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
+    return { error: parsed.error.issues[0]?.message ?? "auth.invalid_form" };
   }
   const { firstName, lastName, phone, email, password } = parsed.data;
 
@@ -27,7 +27,7 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
   });
 
   if (error) {
-    return { error: error.message === "User already registered" ? "Un compte existe déjà avec cet email." : error.message };
+    return { error: error.message === "User already registered" ? "auth.account_already_exists" : error.message };
   }
 
   redirect("/connexion?inscrit=1");
@@ -36,13 +36,13 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
 export async function signInAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = signInSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
+    return { error: parsed.error.issues[0]?.message ?? "auth.invalid_form" };
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
-    return { error: "Email ou mot de passe incorrect." };
+    return { error: "auth.invalid_credentials" };
   }
 
   const next = formData.get("next");
@@ -58,7 +58,7 @@ export async function signOutAction() {
 export async function forgotPasswordAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = forgotPasswordSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Email invalide" };
+    return { error: parsed.error.issues[0]?.message ?? "auth.invalid_email" };
   }
 
   const supabase = await createClient();
@@ -66,13 +66,13 @@ export async function forgotPasswordAction(_prev: ActionState, formData: FormDat
     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reinitialiser-mot-de-passe`,
   });
 
-  return { success: "Si un compte existe avec cet email, un lien de réinitialisation a été envoyé." };
+  return { success: "auth.reset_link_sent" };
 }
 
 export async function resetPasswordAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = resetPasswordSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Mot de passe invalide" };
+    return { error: parsed.error.issues[0]?.message ?? "auth.password_too_short" };
   }
 
   const supabase = await createClient();

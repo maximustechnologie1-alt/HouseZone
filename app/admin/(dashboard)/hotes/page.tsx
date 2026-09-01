@@ -5,7 +5,7 @@ import { StatusTabs } from "@/components/admin/status-tabs";
 import { VerificationStatusBadge } from "@/components/admin/status-badges";
 import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/button";
-import { EmptyState } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatDate } from "@/lib/utils";
 import { HOST_TYPE_LABELS } from "@/lib/constants";
 import type { VerificationStatus } from "@/lib/types/database";

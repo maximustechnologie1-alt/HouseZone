@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { StatusTabs } from "@/components/admin/status-tabs";
 import { PaymentStatusBadge } from "@/components/admin/status-badges";
 import { PaymentActions } from "@/components/admin/payment-actions";
-import { EmptyState } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { PaymentStatus, PaymentMethod } from "@/lib/types/database";
 

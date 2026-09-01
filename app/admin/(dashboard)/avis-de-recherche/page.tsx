@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { SearchAlertStatusBadge } from "@/components/admin/status-badges";
 import { ConfirmActionButton } from "@/components/admin/action-buttons";
 import { closeSearchAlertAsAdminAction } from "@/lib/actions/admin";
-import { EmptyState } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatDate, formatPrice } from "@/lib/utils";
 import type { SearchAlertStatus } from "@/lib/types/database";
 

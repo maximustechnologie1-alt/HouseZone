@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
+import { I18nProvider } from "@/lib/i18n/context";
+import { getServerLocale } from "@/lib/i18n/get-locale";
+import { getLocaleMeta } from "@/lib/i18n/locales";
+import { getCurrentUser } from "@/lib/auth";
 import "./globals.css";
 
 const inter = Inter({
@@ -24,14 +28,20 @@ export const viewport: Viewport = {
   themeColor: "#082B5C",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const [locale, user] = await Promise.all([getServerLocale(), getCurrentUser()]);
+  const dir = getLocaleMeta(locale).dir;
+
   return (
-    <html lang="fr" className={`${inter.variable} h-full antialiased`} data-scroll-behavior="smooth">
+    <html lang={locale} dir={dir} className={`${inter.variable} h-full antialiased`} data-scroll-behavior="smooth">
       <body className="min-h-full flex flex-col bg-white text-hz-ink">
-        {children}
-        <ServiceWorkerRegister />
+        <I18nProvider initialLocale={locale} isAuthenticated={Boolean(user)}>
+          {children}
+          <ServiceWorkerRegister />
+        </I18nProvider>
       </body>
     </html>
   );

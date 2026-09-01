@@ -11,6 +11,20 @@ export default async function BecomeHostPage() {
   const user = await requireUser("/devenir-hote");
   const hostProfile = await getHostProfile(user.id);
 
+  if (hostProfile?.verification_status === "suspendu") {
+    return (
+      <div className="hz-container max-w-lg py-16 text-center">
+        <p className="text-hz-ink/70">
+          Votre statut Hôte a été suspendu par l&apos;administration HouseZone.
+          {hostProfile.verification_reason ? ` Motif : ${hostProfile.verification_reason}` : ""}
+        </p>
+        <LinkButton href="/aide#contact" className="mt-4">
+          Contacter le support
+        </LinkButton>
+      </div>
+    );
+  }
+
   if (hostProfile?.verification_status === "en_cours" || hostProfile?.verification_status === "refuse") {
     return (
       <div className="hz-container max-w-lg py-16 text-center">

@@ -35,13 +35,21 @@ export default async function AdminListingDetailPage({ params }: PageProps<"/adm
     .select(
       `*, cities ( name ), neighborhoods ( name ), property_categories ( name ),
        listing_images ( id, storage_path, position, is_flagged, ocr_flagged_text ),
-       host:profiles!listings_host_id_fkey ( id, first_name, last_name, email, phone ),
-       host_profiles:host_profiles!host_profiles_user_id_fkey ( id, host_type, badge_verified, verification_status )`
+       host:profiles!listings_host_id_fkey ( id, first_name, last_name, email, phone )`
     )
     .eq("id", id)
     .maybeSingle();
 
   if (!listing) notFound();
+
+  // listings and host_profiles both reference profiles independently
+  // (host_id / user_id) rather than one another, so there's no FK for
+  // PostgREST to embed host_profiles on this query — fetched separately.
+  const { data: hostProfile } = await supabase
+    .from("host_profiles")
+    .select("id, host_type, badge_verified, verification_status")
+    .eq("user_id", listing.host_id)
+    .maybeSingle();
 
   const l = listing as unknown as Listing & {
     cities: { name: string } | null;
@@ -49,10 +57,7 @@ export default async function AdminListingDetailPage({ params }: PageProps<"/adm
     property_categories: { name: string } | null;
     listing_images: ListingImage[];
     host: { id: string; first_name: string; last_name: string; email: string | null; phone: string | null } | null;
-    host_profiles: { id: string; host_type: string; badge_verified: boolean; verification_status: string } | { id: string; host_type: string; badge_verified: boolean; verification_status: string }[] | null;
   };
-
-  const hostProfile = Array.isArray(l.host_profiles) ? l.host_profiles[0] : l.host_profiles;
   const images = [...(l.listing_images ?? [])].sort((a, b) => a.position - b.position);
   const activeFeatures = Object.entries(l.features ?? {}).filter(([, v]) => v);
 
@@ -79,7 +84,7 @@ export default async function AdminListingDetailPage({ params }: PageProps<"/adm
             )}
           </div>
         </div>
-        <ListingModerationActions listingId={l.id} adminId={admin.id} />
+        <ListingModerationActions listingId={l.id} adminId={admin.id} status={l.status} />
       </div>
 
       {l.rejection_reason && (

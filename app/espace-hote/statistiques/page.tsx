@@ -1,4 +1,4 @@
-import { Building2, CalendarClock, Eye, Heart } from "lucide-react";
+import { Building2, CalendarClock, Eye, Heart, MessageCircle } from "lucide-react";
 import { requireHost } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { LISTING_STATUS_LABELS, VISIT_STATUS_LABELS } from "@/lib/constants";
@@ -20,18 +20,28 @@ export default async function HostStatsPage() {
   const { profile } = await requireHost();
   const supabase = await createClient();
 
-  const [{ data: listings }, { data: visits }] = await Promise.all([
+  const [{ data: listings }, { data: visits }, { data: conversations }] = await Promise.all([
     supabase
       .from("listings")
       .select("id,title,price,status,views_count,favorites_count")
       .eq("host_id", profile.id),
     supabase.from("visit_requests").select("status").eq("host_id", profile.id),
+    supabase.from("conversations").select("listing_id, messages(count)").eq("host_id", profile.id),
   ]);
 
   const rows = (listings ?? []) as ListingStatRow[];
   const totalViews = rows.reduce((sum, l) => sum + (l.views_count ?? 0), 0);
   const totalFavorites = rows.reduce((sum, l) => sum + (l.favorites_count ?? 0), 0);
   const activeCount = rows.filter((l) => l.status === "active").length;
+
+  // Section 45 du CDC : le nombre de messages fait partie des indicateurs par
+  // annonce, au même titre que les vues et les favoris.
+  const messageCountsByListing = new Map<string, number>();
+  for (const c of (conversations ?? []) as { listing_id: string; messages: { count: number }[] }[]) {
+    const count = c.messages?.[0]?.count ?? 0;
+    messageCountsByListing.set(c.listing_id, (messageCountsByListing.get(c.listing_id) ?? 0) + count);
+  }
+  const totalMessages = [...messageCountsByListing.values()].reduce((sum, n) => sum + n, 0);
 
   const visitsByStatus = (Object.keys(VISIT_STATUS_LABELS) as VisitStatus[]).map((status) => ({
     status,
@@ -66,6 +76,11 @@ export default async function HostStatsPage() {
           <p className="mt-2 text-2xl font-semibold text-hz-navy">{(visits ?? []).length}</p>
           <p className="text-xs text-hz-ink/60">Demandes de visite</p>
         </div>
+        <div className="rounded-card border border-hz-navy/10 bg-white p-4">
+          <MessageCircle className="h-5 w-5 text-hz-blue" />
+          <p className="mt-2 text-2xl font-semibold text-hz-navy">{totalMessages}</p>
+          <p className="text-xs text-hz-ink/60">Messages reçus</p>
+        </div>
       </div>
 
       <div className="mt-6 rounded-card border border-hz-navy/10 bg-white p-5">
@@ -94,6 +109,7 @@ export default async function HostStatsPage() {
                   <th className="pb-2 font-medium">Prix</th>
                   <th className="pb-2 font-medium">Vues</th>
                   <th className="pb-2 font-medium">Favoris</th>
+                  <th className="pb-2 font-medium">Messages</th>
                 </tr>
               </thead>
               <tbody>
@@ -103,7 +119,8 @@ export default async function HostStatsPage() {
                     <td className="py-2 pr-2 text-hz-ink/70">{LISTING_STATUS_LABELS[l.status]}</td>
                     <td className="py-2 pr-2 text-hz-ink/70">{formatPrice(l.price)}</td>
                     <td className="py-2 pr-2 text-hz-ink/70">{l.views_count}</td>
-                    <td className="py-2 text-hz-ink/70">{l.favorites_count}</td>
+                    <td className="py-2 pr-2 text-hz-ink/70">{l.favorites_count}</td>
+                    <td className="py-2 text-hz-ink/70">{messageCountsByListing.get(l.id) ?? 0}</td>
                   </tr>
                 ))}
               </tbody>

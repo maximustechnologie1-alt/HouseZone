@@ -42,6 +42,7 @@ export const VERIFICATION_STATUS_LABELS: Record<VerificationStatus, string> = {
   en_cours: "En cours",
   accepte: "Accepté",
   refuse: "Refusé",
+  suspendu: "Suspendu",
 };
 
 const VERIFICATION_STATUS_COLORS: Record<VerificationStatus, string> = {
@@ -49,6 +50,7 @@ const VERIFICATION_STATUS_COLORS: Record<VerificationStatus, string> = {
   en_cours: "bg-amber-100 text-amber-700",
   accepte: "bg-emerald-100 text-emerald-700",
   refuse: "bg-red-100 text-red-700",
+  suspendu: "bg-orange-100 text-orange-700",
 };
 
 export function VerificationStatusBadge({ status }: { status: VerificationStatus }) {

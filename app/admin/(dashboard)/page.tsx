@@ -14,6 +14,7 @@ export default async function AdminDashboardPage() {
   const now = new Date();
   const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
 
   const [
     { count: totalUsers },
@@ -25,7 +26,11 @@ export default async function AdminDashboardPage() {
     { count: activeSubscriptions },
     { count: expiredSubscriptions },
     { data: monthlyPayments },
+    { data: lastMonthPayments },
     { count: pendingHostRequests },
+    { count: totalVerificationRequests },
+    { count: suspendedUsers },
+    { count: bannedUsers },
     { count: openReports },
     { count: pendingPaymentRequests },
     { data: recentHostRequests },
@@ -40,7 +45,16 @@ export default async function AdminDashboardPage() {
     supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "actif"),
     supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "expire"),
     supabase.from("payments").select("amount").eq("status", "reussi").gte("created_at", startOfMonth),
+    supabase
+      .from("payments")
+      .select("amount")
+      .eq("status", "reussi")
+      .gte("created_at", startOfLastMonth)
+      .lt("created_at", startOfMonth),
     supabase.from("host_profiles").select("id", { count: "exact", head: true }).eq("verification_status", "en_cours"),
+    supabase.from("host_profiles").select("id", { count: "exact", head: true }).neq("verification_status", "non_demande"),
+    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("status", "suspended"),
+    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("status", "banned"),
     supabase.from("reports").select("id", { count: "exact", head: true }).eq("status", "nouveau"),
     supabase.from("subscription_payment_requests").select("id", { count: "exact", head: true }).eq("status", "PENDING"),
     supabase
@@ -59,6 +73,11 @@ export default async function AdminDashboardPage() {
 
   const paymentsCount = monthlyPayments?.length ?? 0;
   const paymentsSum = (monthlyPayments ?? []).reduce((acc, p) => acc + (p.amount ?? 0), 0);
+  const lastMonthPaymentsSum = (lastMonthPayments ?? []).reduce((acc, p) => acc + (p.amount ?? 0), 0);
+  const revenueTrend =
+    lastMonthPaymentsSum === 0
+      ? null
+      : Math.round(((paymentsSum - lastMonthPaymentsSum) / lastMonthPaymentsSum) * 100);
 
   type HostRequestRow = {
     id: string;
@@ -94,9 +113,16 @@ export default async function AdminDashboardPage() {
         <StatCard
           label="Paiements (ce mois)"
           value={paymentsCount}
-          hint={`${new Intl.NumberFormat("fr-FR").format(paymentsSum)} FCFA`}
+          hint={
+            revenueTrend === null
+              ? `${new Intl.NumberFormat("fr-FR").format(paymentsSum)} FCFA`
+              : `${new Intl.NumberFormat("fr-FR").format(paymentsSum)} FCFA · ${revenueTrend >= 0 ? "+" : ""}${revenueTrend}% vs mois dernier`
+          }
         />
         <StatCard label="Demandes Hôte en attente" value={pendingHostRequests ?? 0} />
+        <StatCard label="Demandes de vérification (total)" value={totalVerificationRequests ?? 0} />
+        <StatCard label="Comptes suspendus" value={suspendedUsers ?? 0} />
+        <StatCard label="Comptes bannis" value={bannedUsers ?? 0} />
         <StatCard label="Signalements ouverts" value={openReports ?? 0} />
         <Link href="/admin/abonnements/demandes">
           <StatCard label="Demandes de paiement" value={pendingPaymentRequests ?? 0} hint="En attente de vérification" />

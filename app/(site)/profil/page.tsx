@@ -13,21 +13,24 @@ import {
 import { requireUser } from "@/lib/auth";
 import { signOutAction } from "@/lib/actions/auth";
 import { initials } from "@/lib/utils";
+import { getServerLocale } from "@/lib/i18n/get-locale";
+import { DICTIONARIES } from "@/lib/i18n/registry";
 
 export const metadata = { title: "Profil" };
 
-const LINKS = [
-  { href: "/favoris", label: "Favoris", icon: Heart },
-  { href: "/visites", label: "Mes visites", icon: CalendarClock },
-  { href: "/avis-de-recherche", label: "Avis de recherche", icon: ClipboardList },
-  { href: "/messages", label: "Messages", icon: MessageCircle },
-  { href: "/notifications", label: "Notifications", icon: Bell },
-  { href: "/profil/langue", label: "Langue", icon: Globe },
-  { href: "/profil/parametres", label: "Paramètres du compte", icon: Settings },
-];
-
 export default async function ProfilePage() {
-  const user = await requireUser("/profil");
+  const [user, locale] = await Promise.all([requireUser("/profil"), getServerLocale()]);
+  const t = DICTIONARIES[locale];
+
+  const LINKS = [
+    { href: "/favoris", label: t.nav.favorites, icon: Heart },
+    { href: "/visites", label: t.profile.my_visits, icon: CalendarClock },
+    { href: "/avis-de-recherche", label: t.nav.reviews, icon: ClipboardList },
+    { href: "/messages", label: t.nav.messages, icon: MessageCircle },
+    { href: "/notifications", label: t.nav.notifications, icon: Bell },
+    { href: "/profil/langue", label: t.profile.language_link, icon: Globe },
+    { href: "/profil/parametres", label: t.profile.account_settings, icon: Settings },
+  ];
 
   return (
     <div className="hz-container max-w-xl py-8">
@@ -48,7 +51,7 @@ export default async function ProfilePage() {
           href="/devenir-hote"
           className="mt-6 flex items-center gap-3 rounded-card bg-hz-navy px-4 py-3 text-sm font-medium text-white"
         >
-          <ShieldCheck className="h-5 w-5 text-hz-gold" /> Devenir Hôte
+          <ShieldCheck className="h-5 w-5 text-hz-gold" /> {t.nav.become_host}
         </Link>
       )}
       {user.role === "host" && (
@@ -56,7 +59,7 @@ export default async function ProfilePage() {
           href="/espace-hote"
           className="mt-6 flex items-center gap-3 rounded-card bg-hz-navy px-4 py-3 text-sm font-medium text-white"
         >
-          <ShieldCheck className="h-5 w-5 text-hz-gold" /> Accéder à mon espace Hôte
+          <ShieldCheck className="h-5 w-5 text-hz-gold" /> {t.profile.access_host_space}
         </Link>
       )}
 
@@ -70,7 +73,7 @@ export default async function ProfilePage() {
 
       <form action={signOutAction} className="mt-6">
         <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-full border border-red-200 px-5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50">
-          <LogOut className="h-4 w-4" /> Se déconnecter
+          <LogOut className="h-4 w-4" /> {t.nav.logout}
         </button>
       </form>
     </div>

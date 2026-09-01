@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { StatusTabs } from "@/components/admin/status-tabs";
 import { SubscriptionPaymentRequestStatusBadge } from "@/components/admin/status-badges";
-import { EmptyState } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PAYMENT_METHOD_LABELS } from "@/lib/constants";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { SubscriptionPaymentRequestStatus } from "@/lib/types/database";

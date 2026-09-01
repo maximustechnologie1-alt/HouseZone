@@ -9,8 +9,7 @@ const CARD_SELECT = `
   cities ( name ),
   neighborhoods ( name ),
   property_categories ( name ),
-  listing_images ( storage_path, position ),
-  host_profiles:host_profiles!host_profiles_user_id_fkey ( badge_verified )
+  listing_images ( storage_path, position )
 `;
 
 // Supabase-js infers deeply nested selects poorly without generated types;
@@ -30,14 +29,24 @@ interface ListingCardRow {
   neighborhoods: { name: string } | null;
   property_categories: { name: string } | null;
   listing_images: { storage_path: string; position: number }[];
-  host_profiles: { badge_verified: boolean }[] | { badge_verified: boolean } | null;
 }
 
-function mapRow(row: ListingCardRow): PropertyCardData {
+// `listings` and `host_profiles` both reference `profiles` independently
+// (host_id / user_id) rather than one another directly, so PostgREST can't
+// embed host_profiles on a listings query — there's no FK between the two
+// tables for it to resolve. Verification status is fetched separately here
+// and merged in by host_id instead.
+async function getHostVerificationMap(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  hostIds: string[]
+): Promise<Map<string, boolean>> {
+  if (hostIds.length === 0) return new Map();
+  const { data } = await supabase.from("host_profiles").select("user_id, badge_verified").in("user_id", hostIds);
+  return new Map((data ?? []).map((h) => [h.user_id as string, Boolean(h.badge_verified)]));
+}
+
+function mapRow(row: ListingCardRow, hostVerified: boolean): PropertyCardData {
   const cover = [...(row.listing_images ?? [])].sort((a, b) => a.position - b.position)[0];
-  const hostVerified = Array.isArray(row.host_profiles)
-    ? row.host_profiles[0]?.badge_verified
-    : row.host_profiles?.badge_verified;
 
   return {
     id: row.id,
@@ -52,7 +61,7 @@ function mapRow(row: ListingCardRow): PropertyCardData {
     neighborhoodName: row.neighborhoods?.name,
     categoryName: row.property_categories?.name,
     imageUrl: cover ? publicListingImageUrl(cover.storage_path) : null,
-    hostVerified: Boolean(hostVerified),
+    hostVerified,
     featured: Boolean(row.boosted_until && new Date(row.boosted_until) > new Date()),
   };
 }
@@ -97,8 +106,16 @@ export async function searchListings(filters: SearchFilters) {
   if (filters.maxPrice) query = query.lte("price", filters.maxPrice);
   if (filters.bedrooms) query = query.gte("bedrooms", filters.bedrooms);
   if (filters.furnished !== undefined) query = query.eq("furnished", filters.furnished);
-  if (filters.verifiedHostOnly) query = query.eq("host_profiles.badge_verified", true);
   if (filters.featuredOnly) query = query.not("boosted_until", "is", null);
+
+  if (filters.verifiedHostOnly) {
+    const { data: verified } = await supabase.from("host_profiles").select("user_id").eq("badge_verified", true);
+    const verifiedHostIds = (verified ?? []).map((h) => h.user_id as string);
+    if (verifiedHostIds.length === 0) {
+      return { listings: [] as PropertyCardData[], total: 0, page, pageSize };
+    }
+    query = query.in("host_id", verifiedHostIds);
+  }
 
   const { data, count, error } = await query;
   if (error) {
@@ -106,8 +123,11 @@ export async function searchListings(filters: SearchFilters) {
     return { listings: [] as PropertyCardData[], total: 0, page, pageSize };
   }
 
+  const rows = (data ?? []) as unknown as ListingCardRow[];
+  const verifiedMap = await getHostVerificationMap(supabase, [...new Set(rows.map((r) => r.host_id))]);
+
   return {
-    listings: ((data ?? []) as unknown as ListingCardRow[]).map(mapRow),
+    listings: rows.map((row) => mapRow(row, verifiedMap.get(row.host_id) ?? false)),
     total: count ?? 0,
     page,
     pageSize,
@@ -129,7 +149,9 @@ export async function getListingsByCategory(family: "maison" | "appartement" | "
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  return ((data ?? []) as unknown as ListingCardRow[]).map(mapRow);
+  const rows = (data ?? []) as unknown as ListingCardRow[];
+  const verifiedMap = await getHostVerificationMap(supabase, [...new Set(rows.map((r) => r.host_id))]);
+  return rows.map((row) => mapRow(row, verifiedMap.get(row.host_id) ?? false));
 }
 
 // Section d'accueil "Top résidences & appartements à la une" — biens boostés
@@ -146,7 +168,9 @@ export async function getTopFeaturedListings(limit = 10) {
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  return ((data ?? []) as unknown as ListingCardRow[]).map(mapRow);
+  const rows = (data ?? []) as unknown as ListingCardRow[];
+  const verifiedMap = await getHostVerificationMap(supabase, [...new Set(rows.map((r) => r.host_id))]);
+  return rows.map((row) => mapRow(row, verifiedMap.get(row.host_id) ?? false));
 }
 
 // Sections verticales de l'accueil filtrées par catégorie précise plutôt que
@@ -163,7 +187,9 @@ export async function getListingsByCategorySlugs(slugs: string[], limit = 6) {
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  return ((data ?? []) as unknown as ListingCardRow[]).map(mapRow);
+  const rows = (data ?? []) as unknown as ListingCardRow[];
+  const verifiedMap = await getHostVerificationMap(supabase, [...new Set(rows.map((r) => r.host_id))]);
+  return rows.map((row) => mapRow(row, verifiedMap.get(row.host_id) ?? false));
 }
 
 export interface NearbyListing extends PropertyCardData {
@@ -200,10 +226,14 @@ export async function getNearbyListings(lat: number, lng: number, limit = 6): Pr
     return dLat * dLat + dLng * dLng; // proxy suffisant pour un tri local
   }
 
-  return rows
-    .sort((a, b) => distance(a) - distance(b))
-    .slice(0, limit)
-    .map((row) => ({ ...mapRow(row), latitude: row.latitude, longitude: row.longitude }));
+  const nearest = rows.sort((a, b) => distance(a) - distance(b)).slice(0, limit);
+  const verifiedMap = await getHostVerificationMap(supabase, [...new Set(nearest.map((r) => r.host_id))]);
+
+  return nearest.map((row) => ({
+    ...mapRow(row, verifiedMap.get(row.host_id) ?? false),
+    latitude: row.latitude,
+    longitude: row.longitude,
+  }));
 }
 
 export async function getUserFavoriteIds(userId: string): Promise<Set<string>> {
@@ -221,10 +251,11 @@ export async function getFavoriteListings(userId: string) {
     .order("created_at", { ascending: false });
 
   const rows = (data ?? []) as unknown as { listings: ListingCardRow | ListingCardRow[] }[];
-  return rows
+  const listingRows = rows
     .map((row) => (Array.isArray(row.listings) ? row.listings[0] : row.listings))
-    .filter(Boolean)
-    .map((row) => mapRow(row as ListingCardRow));
+    .filter(Boolean) as ListingCardRow[];
+  const verifiedMap = await getHostVerificationMap(supabase, [...new Set(listingRows.map((r) => r.host_id))]);
+  return listingRows.map((row) => mapRow(row, verifiedMap.get(row.host_id) ?? false));
 }
 
 export async function getListingDetail(id: string) {
@@ -234,13 +265,22 @@ export async function getListingDetail(id: string) {
     .select(
       `*, cities ( name ), neighborhoods ( name ), property_categories ( name ),
        listing_images ( id, storage_path, position ),
-       host:profiles!listings_host_id_fkey ( id, first_name, last_name, avatar_url, created_at ),
-       host_profiles:host_profiles!host_profiles_user_id_fkey ( host_type, company_name, badge_verified, verification_status )`
+       host:profiles!listings_host_id_fkey ( id, first_name, last_name, avatar_url, created_at )`
     )
     .eq("id", id)
     .maybeSingle();
 
-  return listing;
+  if (!listing) return listing;
+
+  // See getHostVerificationMap: no direct FK between listings and
+  // host_profiles for PostgREST to embed, so it's fetched separately.
+  const { data: hostProfile } = await supabase
+    .from("host_profiles")
+    .select("host_type, company_name, badge_verified, verification_status")
+    .eq("user_id", listing.host_id)
+    .maybeSingle();
+
+  return { ...listing, host_profiles: hostProfile };
 }
 
 export async function incrementListingViews(id: string) {

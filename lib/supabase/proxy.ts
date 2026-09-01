@@ -4,6 +4,10 @@ import { NextResponse, type NextRequest } from "next/server";
 const HOST_ROUTE_PREFIX = "/espace-hote";
 const ADMIN_ROUTE_PREFIX = "/admin";
 const PUBLIC_ADMIN_ROUTES = ["/admin/connexion"];
+// A suspended/banned account loses the features tied to its sanction (RG18)
+// — not just the host/admin dashboards — so this check runs for every
+// authenticated route below, with only the suspension notice itself exempt.
+const SUSPENDED_ACCOUNT_ROUTE = "/compte-suspendu";
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -46,7 +50,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && (isHostRoute || isAdminRoute)) {
+  if (user && pathname !== SUSPENDED_ACCOUNT_ROUTE) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role,status")
@@ -55,7 +59,7 @@ export async function updateSession(request: NextRequest) {
 
     if (profile?.status !== "active") {
       const url = request.nextUrl.clone();
-      url.pathname = "/compte-suspendu";
+      url.pathname = SUSPENDED_ACCOUNT_ROUTE;
       return NextResponse.redirect(url);
     }
 

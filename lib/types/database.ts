@@ -5,7 +5,7 @@
 export type UserRole = "client" | "host" | "admin";
 export type UserStatus = "active" | "suspended" | "banned";
 export type HostType = "proprietaire" | "agence" | "demarcheur" | "gestionnaire";
-export type VerificationStatus = "non_demande" | "en_cours" | "accepte" | "refuse";
+export type VerificationStatus = "non_demande" | "en_cours" | "accepte" | "refuse" | "suspendu";
 export type OperationType = "location" | "vente" | "reservation";
 export type ListingStatus =
   | "brouillon"

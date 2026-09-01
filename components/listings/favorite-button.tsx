@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Heart } from "lucide-react";
 import { toggleFavoriteAction } from "@/lib/actions/favorites";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/context";
 
 export function FavoriteButton({
   listingId,
@@ -16,11 +17,12 @@ export function FavoriteButton({
   const [favorite, setFavorite] = useState(initialFavorite);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+  const { t } = useI18n();
 
   return (
     <button
       type="button"
-      aria-label={favorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+      aria-label={favorite ? t("listing.remove_favorite") : t("listing.add_favorite")}
       aria-pressed={favorite}
       disabled={pending}
       onClick={(event) => {

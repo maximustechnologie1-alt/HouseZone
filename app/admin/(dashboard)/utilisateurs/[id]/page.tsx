@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/badge";
 import { UserStatusBadge, VerificationStatusBadge, SANCTION_TYPE_LABELS } from "@/components/admin/status-badges";
 import { UserStatusActions } from "@/components/admin/user-status-actions";
+import { RiskLevelSelect } from "@/components/admin/risk-level-select";
 import { formatDate, formatDateTime, initials } from "@/lib/utils";
 import { HOST_TYPE_LABELS } from "@/lib/constants";
 import type { Profile, HostProfile, Sanction, Report } from "@/lib/types/database";
@@ -74,9 +75,11 @@ export default async function AdminUserDetailPage({ params }: PageProps<"/admin/
                 <UserStatusBadge status={profile.status} />
               </dd>
             </div>
-            <div className="flex justify-between">
+            <div className="flex items-center justify-between">
               <dt className="text-hz-ink/50">Niveau de risque</dt>
-              <dd className="capitalize text-hz-ink">{profile.risk_level.replace("_", " ")}</dd>
+              <dd>
+                <RiskLevelSelect userId={profile.id} adminId={admin.id} riskLevel={profile.risk_level} />
+              </dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-hz-ink/50">Langue</dt>

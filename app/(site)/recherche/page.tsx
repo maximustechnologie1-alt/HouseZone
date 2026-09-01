@@ -3,18 +3,30 @@ import { searchListings } from "@/lib/data/listings";
 import { getUserFavoriteIds } from "@/lib/data/listings";
 import { getCities, getCategories } from "@/lib/data/taxonomies";
 import { getCurrentUser } from "@/lib/auth";
-import { PropertyCard, EmptyState } from "@/components/listings/property-card";
+import { PropertyCard } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { SearchFilters } from "./search-filters";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { getServerLocale } from "@/lib/i18n/get-locale";
+import { DICTIONARIES } from "@/lib/i18n/registry";
 
-export const metadata = { title: "Recherche" };
+export async function generateMetadata() {
+  const locale = await getServerLocale();
+  return { title: DICTIONARIES[locale].search.page_title };
+}
 
 export default async function SearchPage({ searchParams }: PageProps<"/recherche">) {
   const params = await searchParams;
   const page = Number(params.page) || 1;
 
-  const [user, cities, categories] = await Promise.all([getCurrentUser(), getCities(), getCategories()]);
+  const [user, cities, categories, locale] = await Promise.all([
+    getCurrentUser(),
+    getCities(),
+    getCategories(),
+    getServerLocale(),
+  ]);
+  const t = DICTIONARIES[locale];
 
   const categoryId = typeof params.categorie === "string"
     ? categories.find((c) => c.id === params.categorie || c.slug === params.categorie)?.id
@@ -23,6 +35,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/recherche
   const { listings, total, pageSize } = await searchListings({
     q: typeof params.q === "string" ? params.q : undefined,
     cityId: typeof params.ville === "string" ? params.ville : undefined,
+    neighborhoodId: typeof params.quartier === "string" ? params.quartier : undefined,
     categoryId,
     operationType: (params.operation as "location" | "vente" | "reservation") || undefined,
     minPrice: params.prixMin ? Number(params.prixMin) : undefined,
@@ -39,8 +52,10 @@ export default async function SearchPage({ searchParams }: PageProps<"/recherche
 
   return (
     <div className="hz-container py-8">
-      <h1 className="text-xl font-semibold text-hz-navy">Rechercher un bien</h1>
-      <p className="mt-1 text-sm text-hz-ink/60">{total} bien(s) trouvé(s)</p>
+      <h1 className="text-xl font-semibold text-hz-navy">{t.search.page_title}</h1>
+      <p className="mt-1 text-sm text-hz-ink/60">
+        {total} {t.search.results_found}
+      </p>
 
       <div className="mt-4">
         <SearchFilters cities={cities} categories={categories} />
@@ -51,11 +66,11 @@ export default async function SearchPage({ searchParams }: PageProps<"/recherche
           <div className="col-span-full">
             <EmptyState
               icon={SearchX}
-              title="Aucun résultat"
-              description="Essayez d'élargir vos filtres ou publiez un avis de recherche pour être contacté dès qu'un bien correspond."
+              title={t.search.empty_title}
+              description={t.search.empty_description}
               action={
                 <Link href="/avis-de-recherche/nouveau" className="text-sm font-medium text-hz-blue">
-                  Publier un avis de recherche
+                  {t.search.empty_cta}
                 </Link>
               }
             />

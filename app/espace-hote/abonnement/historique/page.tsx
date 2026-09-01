@@ -1,7 +1,7 @@
 import { History } from "lucide-react";
 import { requireHost } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { EmptyState } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { SubscriptionPaymentRequestStatusBadge } from "@/components/admin/status-badges";
 import { CancelPaymentRequestButton } from "./cancel-request-button";
 import { PAYMENT_METHOD_LABELS } from "@/lib/constants";

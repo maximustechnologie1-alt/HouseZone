@@ -9,6 +9,7 @@ import { FREE_TIER_MONTHLY_LISTING_LIMIT } from "@/lib/constants";
 import { analyzeListingImage } from "@/lib/ocr/analyze";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
+import { maybeEscalateRisk } from "@/lib/moderation/risk";
 import type { ListingFeatures } from "@/lib/types/database";
 
 export interface ActionState {
@@ -182,9 +183,12 @@ export async function markListingUnavailableAction(listingId: string) {
 export async function markListingAvailableAction(listingId: string) {
   const user = await requireUser();
   const supabase = await createClient();
+  // Toggling availability isn't republishing new content — the listing was
+  // already approved before being marked unavailable, so it goes straight
+  // back to "active" rather than through a fresh moderation cycle.
   await supabase
     .from("listings")
-    .update({ status: "en_attente" })
+    .update({ status: "active" })
     .eq("id", listingId)
     .eq("host_id", user.id)
     .eq("status", "indisponible");
@@ -252,6 +256,7 @@ export async function uploadListingImageAction(listingId: string, formData: Form
 
       if (result.status === "refuse") {
         await supabase.from("listings").update({ moderation_flag: true }).eq("id", listingId);
+        await maybeEscalateRisk(listing.host_id, "Cumul de photos signalées par l'OCR");
       }
     }
   } catch {
@@ -289,7 +294,7 @@ export async function deleteListingImageAction(imageId: string, listingId: strin
 export async function moderateListingAction(
   listingId: string,
   adminId: string,
-  decision: "active" | "refusee" | "bloquee",
+  decision: "active" | "refusee" | "bloquee" | "indisponible",
   reason?: string
 ) {
   adminId = (await requireAdmin()).id;
@@ -302,7 +307,7 @@ export async function moderateListingAction(
     .from("listings")
     .update({
       status: decision,
-      rejection_reason: decision === "refusee" || decision === "bloquee" ? reason ?? null : null,
+      rejection_reason: decision === "refusee" || decision === "bloquee" || decision === "indisponible" ? reason ?? null : null,
       published_at: decision === "active" ? new Date().toISOString() : undefined,
       moderation_flag: false,
     })
@@ -317,10 +322,27 @@ export async function moderateListingAction(
     reason,
   });
 
+  const notificationType =
+    decision === "active"
+      ? "annonce_approuvee"
+      : decision === "refusee"
+      ? "annonce_refusee"
+      : decision === "bloquee"
+      ? "annonce_bloquee"
+      : "systeme";
+  const title =
+    decision === "active"
+      ? "Annonce approuvée"
+      : decision === "refusee"
+      ? "Annonce refusée"
+      : decision === "bloquee"
+      ? "Annonce bloquée"
+      : "Annonce désactivée par l'administration";
+
   await createNotification({
     userId: listing.host_id,
-    type: decision === "active" ? "annonce_approuvee" : decision === "refusee" ? "annonce_refusee" : "annonce_bloquee",
-    title: decision === "active" ? "Annonce approuvée" : decision === "refusee" ? "Annonce refusée" : "Annonce bloquée",
+    type: notificationType,
+    title,
     body: `« ${listing.title} » ${decision === "active" ? "est maintenant en ligne." : reason ?? ""}`,
     link: "/espace-hote/annonces",
   });

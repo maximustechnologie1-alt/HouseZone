@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { StatusTabs } from "@/components/admin/status-tabs";
 import { Badge } from "@/components/ui/badge";
 import { SubscriptionPriceForm } from "@/components/admin/subscription-price-form";
-import { EmptyState } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { SUBSCRIPTION_STATUS_LABELS, HOST_TYPE_LABELS } from "@/lib/constants";
 import { formatDate, formatPrice } from "@/lib/utils";
 import type { SubscriptionStatus, HostType, SubscriptionPlan } from "@/lib/types/database";

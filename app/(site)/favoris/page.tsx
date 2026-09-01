@@ -1,7 +1,8 @@
 import { Heart } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { getFavoriteListings } from "@/lib/data/listings";
-import { PropertyCard, EmptyState } from "@/components/listings/property-card";
+import { PropertyCard } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata = { title: "Favoris" };
 

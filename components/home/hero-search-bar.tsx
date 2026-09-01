@@ -21,11 +21,11 @@ export function HeroSearchBar({
 
   return (
     <>
-      <div className="flex items-center gap-2 rounded-full bg-white p-2 shadow-xl shadow-hz-navy/10">
+      <div className="flex w-full items-center gap-2 rounded-full bg-white p-2 shadow-xl shadow-hz-navy/10">
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex flex-1 items-center gap-3 rounded-full px-3 py-2.5 text-left"
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-full px-3 py-2.5 text-left"
         >
           <Search className="h-5 w-5 shrink-0 text-hz-blue" />
           <input

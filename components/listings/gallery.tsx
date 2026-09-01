@@ -4,9 +4,11 @@ import Image from "next/image";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/context";
 
 export function Gallery({ images, title }: { images: string[]; title: string }) {
   const [index, setIndex] = useState(0);
+  const { t } = useI18n();
 
   if (images.length === 0) {
     return (
@@ -24,7 +26,7 @@ export function Gallery({ images, title }: { images: string[]; title: string }) 
           <>
             <button
               type="button"
-              aria-label="Photo précédente"
+              aria-label={t("listing.gallery_prev")}
               onClick={() => setIndex((i) => (i - 1 + images.length) % images.length)}
               className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow"
             >

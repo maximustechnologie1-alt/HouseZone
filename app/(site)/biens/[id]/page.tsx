@@ -12,26 +12,29 @@ import { ReportButton } from "@/components/reports/report-button";
 import { ListingMap } from "@/components/listings/listing-map";
 import { formatPrice, initials } from "@/lib/utils";
 import { HOST_TYPE_LABELS } from "@/lib/constants";
+import { getServerLocale } from "@/lib/i18n/get-locale";
+import { DICTIONARIES } from "@/lib/i18n/registry";
 import type { HostType } from "@/lib/types/database";
-
-const FEATURE_LABELS: Record<string, string> = {
-  piscine: "Piscine",
-  climatisation: "Climatisation",
-  gardien: "Gardien",
-  parking: "Parking",
-  terrasse: "Terrasse",
-  jardin: "Jardin",
-  groupe_electrogene: "Groupe électrogène",
-  forage: "Forage",
-  cloture: "Clôturé",
-  internet: "Internet",
-};
 
 export default async function ListingDetailPage({ params }: PageProps<"/biens/[id]">) {
   const { id } = await params;
-  const listing = await getListingDetail(id);
+  const [listing, locale] = await Promise.all([getListingDetail(id), getServerLocale()]);
+  const t = DICTIONARIES[locale];
 
   if (!listing) notFound();
+
+  const FEATURE_LABELS: Record<string, string> = {
+    piscine: t.listing_form.feature_piscine,
+    climatisation: t.listing_form.feature_climatisation,
+    gardien: t.listing_form.feature_gardien,
+    parking: t.listing_form.feature_parking,
+    terrasse: t.listing_form.feature_terrasse,
+    jardin: t.listing_form.feature_jardin,
+    groupe_electrogene: t.listing_form.feature_groupe_electrogene,
+    forage: t.listing_form.feature_forage,
+    cloture: t.listing_form.feature_cloture,
+    internet: t.listing_form.feature_internet,
+  };
 
   const user = await getCurrentUser();
   const isOwner = user?.id === listing.host_id;
@@ -84,19 +87,21 @@ export default async function ListingDetailPage({ params }: PageProps<"/biens/[i
 
           <p className="mt-4 text-2xl font-bold text-hz-navy">
             {formatPrice(listing.price)}
-            {listing.operation_type === "location" && <span className="text-sm font-normal text-hz-ink/50"> /mois</span>}
+            {listing.operation_type === "location" && (
+              <span className="text-sm font-normal text-hz-ink/50"> {t.listing.per_month}</span>
+            )}
           </p>
 
           <div className="mt-4 flex flex-wrap gap-4 text-sm text-hz-ink/70">
             {listing.property_categories?.name && <span>{listing.property_categories.name}</span>}
             {listing.bedrooms ? (
               <span className="flex items-center gap-1">
-                <Bed className="h-4 w-4" /> {listing.bedrooms} chambre(s)
+                <Bed className="h-4 w-4" /> {listing.bedrooms} {t.listing.bedrooms_count}
               </span>
             ) : null}
             {listing.bathrooms ? (
               <span className="flex items-center gap-1">
-                <Bath className="h-4 w-4" /> {listing.bathrooms} salle(s) de bain
+                <Bath className="h-4 w-4" /> {listing.bathrooms} {t.listing.bathrooms_count}
               </span>
             ) : null}
             {listing.surface_m2 ? (
@@ -104,17 +109,17 @@ export default async function ListingDetailPage({ params }: PageProps<"/biens/[i
                 <Ruler className="h-4 w-4" /> {listing.surface_m2} m²
               </span>
             ) : null}
-            {listing.furnished && <span>Meublé</span>}
+            {listing.furnished && <span>{t.listing.furnished}</span>}
           </div>
 
           <div className="mt-6 border-t border-hz-navy/10 pt-6">
-            <h2 className="font-semibold text-hz-navy">Description</h2>
+            <h2 className="font-semibold text-hz-navy">{t.listing.description}</h2>
             <p className="mt-2 whitespace-pre-line text-sm text-hz-ink/80">{listing.description}</p>
           </div>
 
           {listing.features && Object.values(listing.features).some(Boolean) && (
             <div className="mt-6 border-t border-hz-navy/10 pt-6">
-              <h2 className="font-semibold text-hz-navy">Caractéristiques</h2>
+              <h2 className="font-semibold text-hz-navy">{t.listing.features}</h2>
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {Object.entries(listing.features)
                   .filter(([, v]) => v)
@@ -129,7 +134,7 @@ export default async function ListingDetailPage({ params }: PageProps<"/biens/[i
 
           {listing.latitude && listing.longitude && (
             <div className="mt-6 border-t border-hz-navy/10 pt-6">
-              <h2 className="font-semibold text-hz-navy">Localisation</h2>
+              <h2 className="font-semibold text-hz-navy">{t.listing.location}</h2>
               <p className="mt-1 text-sm text-hz-ink/60">{listing.address}</p>
               <div className="mt-3">
                 <ListingMap lat={listing.latitude} lng={listing.longitude} label={listing.title} />
@@ -146,7 +151,7 @@ export default async function ListingDetailPage({ params }: PageProps<"/biens/[i
               </span>
               <div>
                 <p className="font-medium text-hz-navy">
-                  {hostProfile?.company_name || (host ? `${host.first_name} ${host.last_name}` : "Hôte")}
+                  {hostProfile?.company_name || (host ? `${host.first_name} ${host.last_name}` : t.listing.host_default)}
                 </p>
                 <p className="text-xs text-hz-ink/60">
                   {hostProfile?.host_type ? HOST_TYPE_LABELS[hostProfile.host_type as HostType] : ""}
@@ -161,9 +166,9 @@ export default async function ListingDetailPage({ params }: PageProps<"/biens/[i
 
             {isOwner ? (
               <p className="mt-4 rounded-xl bg-hz-sky px-3 py-2 text-xs text-hz-ink/70">
-                Ceci est votre annonce.{" "}
+                {t.listing.your_listing_notice}{" "}
                 <a href={`/espace-hote/annonces/${id}/modifier`} className="font-medium text-hz-blue">
-                  Modifier
+                  {t.listing.edit}
                 </a>
               </p>
             ) : (

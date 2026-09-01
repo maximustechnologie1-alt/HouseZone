@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { checkMessageContent } from "@/lib/messaging/contact-filter";
 import { messageSchema } from "@/lib/validations";
 import { createNotification } from "@/lib/notifications/create";
+import { hasActiveHostSubscription } from "@/lib/data/subscriptions";
 
 export async function startConversationAction(listingId: string) {
   const user = await requireUser(`/biens/${listingId}`);
@@ -62,6 +63,12 @@ export async function sendMessageAction(
 
   if (!conversation || (conversation.client_id !== user.id && conversation.host_id !== user.id)) {
     return { error: "Conversation introuvable." };
+  }
+
+  if (conversation.host_id === user.id && !(await hasActiveHostSubscription(user.id))) {
+    return {
+      error: "Votre abonnement a expiré. Renouvelez-le depuis votre espace Hôte pour continuer à échanger avec les clients.",
+    };
   }
 
   const { blocked, reason } = checkMessageContent(parsed.data.content);

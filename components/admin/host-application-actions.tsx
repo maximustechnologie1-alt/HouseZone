@@ -2,7 +2,8 @@
 
 import { ReasonActionButton, ConfirmActionButton } from "@/components/admin/action-buttons";
 import { approveHostApplicationAction, rejectHostApplicationAction } from "@/lib/actions/host-application";
-import { toggleHostBadgeAction } from "@/lib/actions/admin";
+import { toggleHostBadgeAction, suspendHostAction, reactivateHostAction } from "@/lib/actions/admin";
+import type { VerificationStatus } from "@/lib/types/database";
 
 export function HostApplicationActions({
   hostProfileId,
@@ -12,7 +13,7 @@ export function HostApplicationActions({
 }: {
   hostProfileId: string;
   adminId: string;
-  verificationStatus: "non_demande" | "en_cours" | "accepte" | "refuse";
+  verificationStatus: VerificationStatus;
   badgeVerified: boolean;
 }) {
   return (
@@ -36,13 +37,31 @@ export function HostApplicationActions({
         />
       )}
       {verificationStatus === "accepte" && (
+        <>
+          <ConfirmActionButton
+            label={badgeVerified ? "Retirer le badge vérifié" : "Attribuer le badge vérifié"}
+            confirmMessage={
+              badgeVerified ? "Retirer le badge vérifié à cet hôte ?" : "Attribuer le badge vérifié à cet hôte ?"
+            }
+            variant="gold"
+            action={() => toggleHostBadgeAction(hostProfileId, adminId, !badgeVerified)}
+          />
+          <ReasonActionButton
+            label="Suspendre le statut Hôte"
+            title="Suspendre le statut Hôte"
+            actionLabel="Confirmer la suspension"
+            variant="danger"
+            placeholder="Motif de la suspension..."
+            action={(reason) => suspendHostAction(hostProfileId, adminId, reason)}
+          />
+        </>
+      )}
+      {verificationStatus === "suspendu" && (
         <ConfirmActionButton
-          label={badgeVerified ? "Retirer le badge vérifié" : "Attribuer le badge vérifié"}
-          confirmMessage={
-            badgeVerified ? "Retirer le badge vérifié à cet hôte ?" : "Attribuer le badge vérifié à cet hôte ?"
-          }
-          variant="gold"
-          action={() => toggleHostBadgeAction(hostProfileId, adminId, !badgeVerified)}
+          label="Réactiver le statut Hôte"
+          confirmMessage="Réactiver le statut Hôte de ce compte ?"
+          variant="primary"
+          action={() => reactivateHostAction(hostProfileId, adminId)}
         />
       )}
     </div>

@@ -2,7 +2,7 @@ import { CalendarClock } from "lucide-react";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { getClientVisits } from "@/lib/data/visits";
-import { EmptyState } from "@/components/listings/property-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { VisitStatusBadge } from "@/components/visits/visit-status-badge";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { CancelVisitButton } from "./cancel-visit-button";

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useMounted } from "@/lib/hooks/use-mounted";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/field";
+import { useI18n } from "@/lib/i18n/context";
 import type { City, Neighborhood, PropertyCategory } from "@/lib/types/database";
 
 interface AdvancedSearchSheetProps {
@@ -18,20 +19,21 @@ interface AdvancedSearchSheetProps {
   categories: PropertyCategory[];
 }
 
-const TRANSACTIONS = [
-  { value: "", label: "Indifférent" },
-  { value: "location", label: "Location" },
-  { value: "vente", label: "Vente" },
-] as const;
-
-const FURNISHED_OPTIONS = [
-  { value: "", label: "Indifférent" },
-  { value: "1", label: "Meublé" },
-  { value: "0", label: "Non meublé" },
-] as const;
-
 export function AdvancedSearchSheet({ open, onClose, cities, neighborhoods, categories }: AdvancedSearchSheetProps) {
   const router = useRouter();
+  const { t } = useI18n();
+
+  const TRANSACTIONS = [
+    { value: "", label: t("search.indifferent") },
+    { value: "location", label: t("search.location") },
+    { value: "vente", label: t("search.sale") },
+  ] as const;
+
+  const FURNISHED_OPTIONS = [
+    { value: "", label: t("search.indifferent") },
+    { value: "1", label: t("search.furnished_yes") },
+    { value: "0", label: t("search.furnished_no") },
+  ] as const;
 
   const [cityId, setCityId] = useState("");
   const [neighborhoodId, setNeighborhoodId] = useState("");
@@ -72,11 +74,11 @@ export function AdvancedSearchSheet({ open, onClose, cities, neighborhoods, cate
     <div className="fixed inset-0 z-[90] flex items-end justify-center bg-hz-navy/40 sm:items-center sm:p-4">
       <div className="flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl bg-white sm:max-w-lg sm:rounded-card">
         <div className="flex items-center justify-between border-b border-hz-navy/10 px-5 py-4">
-          <h2 className="text-lg font-semibold text-hz-navy">Recherche avancée</h2>
+          <h2 className="text-lg font-semibold text-hz-navy">{t("search.advanced_title")}</h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t("search.close")}
             className="flex h-9 w-9 items-center justify-center rounded-full text-hz-navy hover:bg-hz-sky"
           >
             <X className="h-5 w-5" />
@@ -86,11 +88,11 @@ export function AdvancedSearchSheet({ open, onClose, cities, neighborhoods, cate
         <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
           <div>
             <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-hz-navy">
-              <MapPin className="h-4 w-4" /> Localisation
+              <MapPin className="h-4 w-4" /> {t("search.location_section")}
             </p>
             <div className="grid grid-cols-2 gap-3">
               <Select value={cityId} onChange={(e) => { setCityId(e.target.value); setNeighborhoodId(""); }}>
-                <option value="">Toutes les villes</option>
+                <option value="">{t("search.all_cities")}</option>
                 {cities.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -98,7 +100,7 @@ export function AdvancedSearchSheet({ open, onClose, cities, neighborhoods, cate
                 ))}
               </Select>
               <Select value={neighborhoodId} onChange={(e) => setNeighborhoodId(e.target.value)} disabled={!cityId}>
-                <option value="">Tous les quartiers</option>
+                <option value="">{t("search.all_neighborhoods")}</option>
                 {filteredNeighborhoods.map((n) => (
                   <option key={n.id} value={n.id}>
                     {n.name}
@@ -109,10 +111,10 @@ export function AdvancedSearchSheet({ open, onClose, cities, neighborhoods, cate
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-semibold text-hz-navy">Type de bien</p>
+            <p className="mb-2 text-sm font-semibold text-hz-navy">{t("search.property_type")}</p>
             <div className="flex flex-wrap gap-2">
               <PillOption active={categoryId === ""} onClick={() => setCategoryId("")}>
-                Tous
+                {t("search.all")}
               </PillOption>
               {categories.map((c) => (
                 <PillOption key={c.id} active={categoryId === c.id} onClick={() => setCategoryId(c.id)}>
@@ -123,29 +125,29 @@ export function AdvancedSearchSheet({ open, onClose, cities, neighborhoods, cate
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-semibold text-hz-navy">Transaction</p>
+            <p className="mb-2 text-sm font-semibold text-hz-navy">{t("search.transaction")}</p>
             <div className="flex flex-wrap gap-2">
-              {TRANSACTIONS.map((t) => (
-                <PillOption key={t.value} active={operation === t.value} onClick={() => setOperation(t.value)}>
-                  {t.label}
+              {TRANSACTIONS.map((option) => (
+                <PillOption key={option.value} active={operation === option.value} onClick={() => setOperation(option.value)}>
+                  {option.label}
                 </PillOption>
               ))}
             </div>
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-semibold text-hz-navy">Prix (FCFA)</p>
+            <p className="mb-2 text-sm font-semibold text-hz-navy">{t("search.price_fcfa")}</p>
             <div className="grid grid-cols-2 gap-3">
-              <Input type="number" placeholder="Minimum" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} />
-              <Input type="number" placeholder="Maximum" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
+              <Input type="number" placeholder={t("search.price_min")} value={minPrice} onChange={(e) => setMinPrice(e.target.value)} />
+              <Input type="number" placeholder={t("search.price_max")} value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
             </div>
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-semibold text-hz-navy">Chambres</p>
+            <p className="mb-2 text-sm font-semibold text-hz-navy">{t("search.bedrooms")}</p>
             <div className="flex flex-wrap gap-2">
               <PillOption active={bedrooms === ""} onClick={() => setBedrooms("")}>
-                Indifférent
+                {t("search.indifferent")}
               </PillOption>
               {[1, 2, 3, 4, 5].map((n) => (
                 <PillOption key={n} active={bedrooms === String(n)} onClick={() => setBedrooms(String(n))}>
@@ -156,7 +158,7 @@ export function AdvancedSearchSheet({ open, onClose, cities, neighborhoods, cate
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-semibold text-hz-navy">Meublé</p>
+            <p className="mb-2 text-sm font-semibold text-hz-navy">{t("search.furnished_yes")}</p>
             <div className="flex flex-wrap gap-2">
               {FURNISHED_OPTIONS.map((f) => (
                 <PillOption key={f.value} active={furnished === f.value} onClick={() => setFurnished(f.value)}>
@@ -167,13 +169,13 @@ export function AdvancedSearchSheet({ open, onClose, cities, neighborhoods, cate
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-semibold text-hz-navy">Autres filtres</p>
+            <p className="mb-2 text-sm font-semibold text-hz-navy">{t("search.other_filters")}</p>
             <div className="flex flex-wrap gap-2">
               <PillOption active={verifiedOnly} onClick={() => setVerifiedOnly((v) => !v)}>
-                Hôte vérifié
+                {t("search.verified_host")}
               </PillOption>
               <PillOption active={featuredOnly} onClick={() => setFeaturedOnly((v) => !v)}>
-                À la une
+                {t("search.featured")}
               </PillOption>
             </div>
           </div>
@@ -181,7 +183,7 @@ export function AdvancedSearchSheet({ open, onClose, cities, neighborhoods, cate
 
         <div className="border-t border-hz-navy/10 p-4">
           <Button onClick={submit} size="lg" className="w-full">
-            <Search className="h-4 w-4" /> Rechercher
+            <Search className="h-4 w-4" /> {t("search.search_cta")}
           </Button>
         </div>
       </div>
