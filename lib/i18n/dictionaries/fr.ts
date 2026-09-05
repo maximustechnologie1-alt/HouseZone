@@ -7,6 +7,12 @@
 const fr = {
   nav: {
     home: "Accueil",
+    search: "Rechercher",
+    buy: "Acheter",
+    rent: "Louer",
+    lands: "Terrains",
+    hotels: "Hôtels",
+    publish_listing: "Publier une annonce",
     favorites: "Favoris",
     reviews: "Avis de recherche",
     reviews_short: "Avis",

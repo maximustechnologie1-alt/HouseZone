@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { X, Search, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMounted } from "@/lib/hooks/use-mounted";
@@ -19,8 +19,26 @@ interface AdvancedSearchSheetProps {
   categories: PropertyCategory[];
 }
 
+// Wrapper léger : ne monte le contenu (et ses states) que pendant que le
+// sheet est ouvert. Ainsi, à chaque ouverture, le contenu est remonté à
+// neuf et ses states s'initialisent depuis les query params actuels de
+// l'URL (ex: rouvert depuis /recherche avec des filtres déjà actifs).
 export function AdvancedSearchSheet({ open, onClose, cities, neighborhoods, categories }: AdvancedSearchSheetProps) {
+  const mounted = useMounted();
+  if (!open || !mounted) return null;
+  return (
+    <AdvancedSearchSheetContent onClose={onClose} cities={cities} neighborhoods={neighborhoods} categories={categories} />
+  );
+}
+
+function AdvancedSearchSheetContent({
+  onClose,
+  cities,
+  neighborhoods,
+  categories,
+}: Omit<AdvancedSearchSheetProps, "open">) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useI18n();
 
   const TRANSACTIONS = [
@@ -35,24 +53,21 @@ export function AdvancedSearchSheet({ open, onClose, cities, neighborhoods, cate
     { value: "0", label: t("search.furnished_no") },
   ] as const;
 
-  const [cityId, setCityId] = useState("");
-  const [neighborhoodId, setNeighborhoodId] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [operation, setOperation] = useState<string>("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [bedrooms, setBedrooms] = useState("");
-  const [furnished, setFurnished] = useState<string>("");
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [featuredOnly, setFeaturedOnly] = useState(false);
-  const mounted = useMounted();
+  const [cityId, setCityId] = useState(() => searchParams.get("ville") ?? "");
+  const [neighborhoodId, setNeighborhoodId] = useState(() => searchParams.get("quartier") ?? "");
+  const [categoryId, setCategoryId] = useState(() => searchParams.get("categorie") ?? "");
+  const [operation, setOperation] = useState<string>(() => searchParams.get("operation") ?? "");
+  const [minPrice, setMinPrice] = useState(() => searchParams.get("prixMin") ?? "");
+  const [maxPrice, setMaxPrice] = useState(() => searchParams.get("prixMax") ?? "");
+  const [bedrooms, setBedrooms] = useState(() => searchParams.get("chambres") ?? "");
+  const [furnished, setFurnished] = useState<string>(() => searchParams.get("meuble") ?? "");
+  const [verifiedOnly, setVerifiedOnly] = useState(() => searchParams.get("verifie") === "1");
+  const [featuredOnly, setFeaturedOnly] = useState(() => searchParams.get("une") === "1");
 
   const filteredNeighborhoods = useMemo(
     () => neighborhoods.filter((n) => n.city_id === cityId),
     [neighborhoods, cityId]
   );
-
-  if (!open || !mounted) return null;
 
   function submit() {
     const params = new URLSearchParams();

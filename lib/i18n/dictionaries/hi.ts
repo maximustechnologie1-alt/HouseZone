@@ -3,6 +3,12 @@ import type { Dictionary } from "../types";
 const hi: Dictionary = {
   nav: {
     home: "होम",
+    search: "खोज",
+    buy: "खरीदें",
+    rent: "किराया",
+    lands: "ज़मीन",
+    hotels: "होटल",
+    publish_listing: "विज्ञापन डालें",
     favorites: "पसंदीदा",
     reviews: "खोज अनुरोध",
     reviews_short: "अनुरोध",

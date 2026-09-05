@@ -3,6 +3,12 @@ import type { Dictionary } from "../types";
 const zh: Dictionary = {
   nav: {
     home: "首页",
+    search: "搜索",
+    buy: "购买",
+    rent: "租赁",
+    lands: "土地",
+    hotels: "酒店",
+    publish_listing: "发布房源",
     favorites: "收藏",
     reviews: "求购信息",
     reviews_short: "求购",

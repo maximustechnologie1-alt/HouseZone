@@ -14,3 +14,23 @@ export function LogoMark({ size = 36, className }: { size?: number; className?: 
     />
   );
 }
+
+// Wordmark texte « HOUSEZONE » — HOUSE en navy, ZONE en blue, capitales.
+// Séparé de LogoMark pour rester réutilisable (header, drawer, auth, hôte).
+export function Wordmark({
+  className,
+  variant = "navy",
+}: {
+  className?: string;
+  variant?: "navy" | "light";
+}) {
+  return (
+    <span
+      className={`text-lg font-bold uppercase tracking-tight ${
+        variant === "light" ? "text-white" : "text-hz-navy"
+      } ${className ?? ""}`}
+    >
+      House<span className={variant === "light" ? "text-hz-sky" : "text-hz-blue"}>zone</span>
+    </span>
+  );
+}

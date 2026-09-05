@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { LogoMark } from "@/components/ui/logo-mark";
+import { LogoMark, Wordmark } from "@/components/ui/logo-mark";
 
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="flex min-h-screen flex-col bg-hz-sky">
       <div className="hz-container flex h-16 items-center">
         <Link href="/" className="flex items-center gap-2">
-          <LogoMark size={36} />
-          <span className="text-lg font-semibold text-hz-navy">HouseZone</span>
+          <LogoMark size={32} />
+          <Wordmark />
         </Link>
       </div>
       <div className="flex flex-1 items-center justify-center px-4 pb-16">

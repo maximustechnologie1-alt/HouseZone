@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, Home, MessageCircle, User, ClipboardList } from "lucide-react";
+import { Heart, Home, MessageCircle, User, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavDrawer } from "@/components/layout/nav-drawer-context";
 import { useI18n } from "@/lib/i18n/context";
@@ -20,8 +20,8 @@ export function MobileBottomNav({
 
   const items: { href: string; label: string; icon: typeof Home; exact?: boolean; badge?: number }[] = [
     { href: "/", label: t("nav.home"), icon: Home, exact: true },
+    { href: "/recherche", label: t("nav.search"), icon: Search },
     { href: "/favoris", label: t("nav.favorites"), icon: Heart },
-    { href: "/avis-de-recherche", label: t("nav.reviews_short"), icon: ClipboardList },
     { href: messagesHref, label: t("nav.messages"), icon: MessageCircle, badge: unreadMessages },
   ];
 

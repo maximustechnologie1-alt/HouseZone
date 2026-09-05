@@ -3,6 +3,12 @@ import type { Dictionary } from "../types";
 const ja: Dictionary = {
   nav: {
     home: "ホーム",
+    search: "検索",
+    buy: "購入",
+    rent: "賃貸",
+    lands: "土地",
+    hotels: "ホテル",
+    publish_listing: "物件を掲載",
     favorites: "お気に入り",
     reviews: "物件リクエスト",
     reviews_short: "リクエスト",

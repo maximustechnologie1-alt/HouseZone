@@ -1,11 +1,14 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Building2, CalendarClock, Eye, Heart, MessageCircle } from "lucide-react";
+import { Building2, CalendarClock, Crown, Eye, Heart, MessageCircle, Plus } from "lucide-react";
 import { requireHost } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getHostVisits } from "@/lib/data/visits";
 import { getConversationsForUser } from "@/lib/data/messages";
 import { SUBSCRIPTION_STATUS_LABELS, HOST_TYPE_LABELS } from "@/lib/constants";
 import { formatDate, relativeTime } from "@/lib/utils";
+import { LinkButton } from "@/components/ui/button";
+import { VerifiedBadge } from "@/components/ui/badge";
 import type { Subscription } from "@/lib/types/database";
 
 export const metadata = { title: "Tableau de bord Hôte" };
@@ -65,20 +68,69 @@ export default async function HostDashboardPage() {
     { label: "Messages non lus", value: unreadMessages, icon: MessageCircle },
   ];
 
+  const memberSince = new Date(profile.created_at).toLocaleDateString("fr-FR", {
+    month: "long",
+    year: "numeric",
+  });
+
   return (
     <div>
-      <h1 className="text-xl font-semibold text-hz-navy">
-        Bonjour {profile.first_name}
-      </h1>
-      <p className="mt-1 text-sm text-hz-ink/60">Voici un aperçu de votre activité sur HouseZone.</p>
+      <div className="rounded-card border border-hz-navy/10 bg-white p-5">
+        <div className="flex items-center gap-4">
+          {profile.avatar_url ? (
+            <Image
+              src={profile.avatar_url}
+              alt=""
+              width={56}
+              height={56}
+              className="h-14 w-14 shrink-0 rounded-full object-cover"
+            />
+          ) : (
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-hz-sky text-lg font-semibold text-hz-navy">
+              {profile.first_name.charAt(0).toUpperCase()}
+            </span>
+          )}
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-lg font-semibold text-hz-navy">
+                {profile.first_name} {profile.last_name}
+              </p>
+              {hostProfile.badge_verified && <VerifiedBadge />}
+            </div>
+            <p className="mt-0.5 text-sm text-hz-ink/60 first-letter:uppercase">
+              Membre depuis {memberSince}
+            </p>
+          </div>
+        </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-hz-navy/10 pt-4">
+          <span className="flex items-center gap-2 text-sm text-hz-ink/70">
+            <Crown className="h-4.5 w-4.5 shrink-0 text-hz-gold" />
+            Abonnement {HOST_TYPE_LABELS[hostProfile.host_type]} —{" "}
+            <span className="font-medium text-hz-navy">
+              {subscriptionRow ? SUBSCRIPTION_STATUS_LABELS[subscriptionRow.status] : "aucun"}
+            </span>
+            {subscriptionRow && (
+              <span className="text-hz-ink/50">· jusqu&apos;au {formatDate(subscriptionRow.end_date)}</span>
+            )}
+          </span>
+          <LinkButton href="/espace-hote/abonnement" variant="outline" size="sm">
+            Gérer
+          </LinkButton>
+        </div>
+      </div>
+
+      <LinkButton href="/espace-hote/annonces/nouveau" className="mt-4 w-full">
+        <Plus className="h-4.5 w-4.5" /> Publier une annonce
+      </LinkButton>
+
+      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
         {stats.map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-card border border-hz-navy/10 bg-white p-4">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-hz-blue/10">
               <Icon className="h-4.5 w-4.5 text-hz-blue" strokeWidth={2.25} />
             </span>
-            <p className="mt-2 text-2xl font-semibold text-hz-navy">{value}</p>
+            <p className="mt-2 text-2xl font-bold text-hz-navy">{value}</p>
             <p className="text-xs text-hz-ink/60">{label}</p>
           </div>
         ))}

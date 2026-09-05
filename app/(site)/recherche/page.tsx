@@ -1,7 +1,7 @@
 import { SearchX } from "lucide-react";
 import { searchListings } from "@/lib/data/listings";
 import { getUserFavoriteIds } from "@/lib/data/listings";
-import { getCities, getCategories } from "@/lib/data/taxonomies";
+import { getCities, getCategories, getNeighborhoods } from "@/lib/data/taxonomies";
 import { getCurrentUser } from "@/lib/auth";
 import { PropertyCard } from "@/components/listings/property-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -20,9 +20,10 @@ export default async function SearchPage({ searchParams }: PageProps<"/recherche
   const params = await searchParams;
   const page = Number(params.page) || 1;
 
-  const [user, cities, categories, locale] = await Promise.all([
+  const [user, cities, neighborhoods, categories, locale] = await Promise.all([
     getCurrentUser(),
     getCities(),
+    getNeighborhoods(),
     getCategories(),
     getServerLocale(),
   ]);
@@ -58,7 +59,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/recherche
       </p>
 
       <div className="mt-4">
-        <SearchFilters cities={cities} categories={categories} />
+        <SearchFilters cities={cities} neighborhoods={neighborhoods} categories={categories} />
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

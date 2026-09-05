@@ -10,6 +10,11 @@ import { useI18n } from "@/lib/i18n/context";
 import type { Listing } from "@/lib/types/database";
 import { FavoriteButton } from "@/components/listings/favorite-button";
 
+const OPERATION_LABELS: Record<string, string> = {
+  vente: "À vendre",
+  location: "À louer",
+};
+
 export interface PropertyCardData extends Pick<
   Listing,
   "id" | "title" | "price" | "operation_type" | "status" | "bedrooms" | "bathrooms" | "furnished"
@@ -49,18 +54,26 @@ export function PropertyCard({
               <MapPin className="h-8 w-8" />
             </div>
           )}
-          {showStatus && (
-            <span
-              className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-medium ${LISTING_STATUS_COLORS[listing.status]}`}
-            >
-              {LISTING_STATUS_LABELS[listing.status]}
-            </span>
-          )}
-          {!showStatus && listing.featured && (
-            <span className="absolute left-3 top-3 rounded-full bg-hz-gold px-2.5 py-1 text-xs font-bold text-hz-navy">
-              {t("listing.featured_badge")}
-            </span>
-          )}
+          <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+            {showStatus ? (
+              <span
+                className={`rounded-full px-2.5 py-1 text-xs font-medium ${LISTING_STATUS_COLORS[listing.status]}`}
+              >
+                {LISTING_STATUS_LABELS[listing.status]}
+              </span>
+            ) : (
+              <>
+                <span className="rounded-full bg-hz-navy/85 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+                  {OPERATION_LABELS[listing.operation_type] ?? listing.operation_type}
+                </span>
+                {listing.featured && (
+                  <span className="rounded-full bg-hz-gold px-2.5 py-1 text-xs font-bold text-hz-navy">
+                    {t("listing.featured_badge")}
+                  </span>
+                )}
+              </>
+            )}
+          </div>
           <div className="absolute right-3 top-3">
             <FavoriteButton listingId={listing.id} initialFavorite={isFavorite} />
           </div>
@@ -68,7 +81,7 @@ export function PropertyCard({
       </Link>
       <Link href={`/biens/${listing.id}`} className="block p-4">
         <div className="flex items-start justify-between gap-2">
-          <p className="font-semibold text-hz-navy">{formatPrice(listing.price)}</p>
+          <p className="text-lg font-bold text-hz-navy">{formatPrice(listing.price)}</p>
           {listing.operation_type === "location" && (
             <span className="text-xs text-hz-ink/50">{t("listing.per_month")}</span>
           )}

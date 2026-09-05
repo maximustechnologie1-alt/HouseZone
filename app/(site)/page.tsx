@@ -47,12 +47,26 @@ export default async function HomePage() {
 
   return (
     <div>
-      <section className="bg-hz-navy pb-6 pt-5 sm:pb-12 sm:pt-10">
-        <div className="hz-container">
-          <p className="mb-4 text-balance text-lg font-semibold leading-snug text-white sm:text-2xl">
-            Trouvez votre <span className="text-hz-gold">prochain bien</span>.
-          </p>
-          <HeroSearchBar cities={cities} neighborhoods={neighborhoods} categories={categories} />
+      <section className="relative overflow-hidden bg-hz-navy pb-5 pt-5 sm:pb-8 sm:pt-7 lg:pb-10 lg:pt-10">
+        {/* Image de fond optionnelle : déposez public/hero-web.jpg.
+            Si le fichier est absent, seul le fond navy s'affiche. */}
+        <div
+          aria-hidden
+          className="absolute inset-0 hidden bg-[url('/hero-web.jpg')] bg-cover bg-center lg:block"
+        />
+        <div aria-hidden className="absolute inset-0 hidden bg-hz-navy/80 lg:block" />
+        <div className="relative z-10 hz-container">
+          <div className="lg:mx-auto lg:max-w-3xl lg:text-center">
+            <h1 className="text-balance text-2xl font-bold leading-tight text-white sm:text-3xl lg:text-[2.5rem]">
+              Trouvez le bien <span className="text-hz-gold">qui vous correspond</span>.
+            </h1>
+            <p className="mb-4 mt-2 text-sm text-white/70 sm:text-base lg:mb-5 lg:text-lg">
+              Des milliers d&apos;annonces vérifiées vous attendent, partout au Burkina Faso.
+            </p>
+          </div>
+          <div className="lg:mx-auto lg:max-w-3xl">
+            <HeroSearchBar cities={cities} neighborhoods={neighborhoods} categories={categories} />
+          </div>
         </div>
       </section>
 

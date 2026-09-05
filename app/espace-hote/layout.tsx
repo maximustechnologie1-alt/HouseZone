@@ -1,32 +1,10 @@
 import Link from "next/link";
-import {
-  LayoutDashboard,
-  Building2,
-  CalendarClock,
-  MessageCircle,
-  ClipboardList,
-  BarChart3,
-  CreditCard,
-  UserCircle,
-  Sparkles,
-} from "lucide-react";
 import { requireHost } from "@/lib/auth";
 import { HostMobileNav } from "@/components/host/host-mobile-nav";
 import { HostTopbar } from "@/components/host/host-topbar";
-import { LogoMark } from "@/components/ui/logo-mark";
+import { HOST_NAV } from "@/components/host/host-nav-items";
+import { LogoMark, Wordmark } from "@/components/ui/logo-mark";
 import { getUnreadMessageCount } from "@/lib/data/messages";
-
-const NAV = [
-  { href: "/espace-hote", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/espace-hote/annonces", label: "Mes annonces", icon: Building2 },
-  { href: "/espace-hote/visites", label: "Visites", icon: CalendarClock },
-  { href: "/espace-hote/messages", label: "Messages", icon: MessageCircle },
-  { href: "/espace-hote/avis-de-recherche", label: "Avis de recherche", icon: ClipboardList },
-  { href: "/espace-hote/statistiques", label: "Statistiques", icon: BarChart3 },
-  { href: "/espace-hote/abonnement", label: "Abonnement", icon: CreditCard },
-  { href: "/espace-hote/premium", label: "Premium", icon: Sparkles },
-  { href: "/espace-hote/profil", label: "Profil professionnel", icon: UserCircle },
-];
 
 export default async function HostLayout({ children }: LayoutProps<"/">) {
   const { profile, hostProfile } = await requireHost();
@@ -36,11 +14,11 @@ export default async function HostLayout({ children }: LayoutProps<"/">) {
     <div className="flex min-h-screen bg-hz-sky/30">
       <aside className="hidden w-64 shrink-0 border-r border-hz-navy/10 bg-white p-5 lg:block">
         <Link href="/" className="flex items-center gap-2">
-          <LogoMark size={36} />
-          <span className="text-lg font-semibold text-hz-navy">HouseZone</span>
+          <LogoMark size={32} />
+          <Wordmark />
         </Link>
         <nav className="mt-8 space-y-1">
-          {NAV.map(({ href, label, icon: Icon }) => (
+          {HOST_NAV.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}
@@ -59,7 +37,7 @@ export default async function HostLayout({ children }: LayoutProps<"/">) {
         </nav>
       </aside>
       <div className="min-w-0 flex-1">
-        <HostTopbar profile={profile} hostProfile={hostProfile} />
+        <HostTopbar profile={profile} hostProfile={hostProfile} unreadMessages={unreadMessages} />
         <main className="p-4 pb-20 sm:p-6 lg:pb-6">{children}</main>
       </div>
       <HostMobileNav unreadMessages={unreadMessages} />

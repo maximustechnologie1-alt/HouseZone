@@ -1,7 +1,23 @@
 import Link from "next/link";
+import {
+  Users,
+  ShieldCheck,
+  UserPlus,
+  Building2,
+  CheckCircle2,
+  Ban,
+  Receipt,
+  CalendarX,
+  Wallet,
+  Clock,
+  FileCheck,
+  UserX,
+  Flag,
+} from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { StatCard } from "@/components/admin/stat-card";
+import { MiniTrendChart } from "@/components/admin/mini-trend-chart";
 import { relativeTime } from "@/lib/utils";
 import { HOST_TYPE_LABELS } from "@/lib/constants";
 
@@ -15,6 +31,7 @@ export default async function AdminDashboardPage() {
   const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+  const startOfTrendWindow = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString();
 
   const [
     { count: totalUsers },
@@ -35,6 +52,7 @@ export default async function AdminDashboardPage() {
     { count: pendingPaymentRequests },
     { data: recentHostRequests },
     { data: recentReports },
+    { data: listingsHistory },
   ] = await Promise.all([
     supabase.from("profiles").select("id", { count: "exact", head: true }),
     supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "host"),
@@ -69,6 +87,7 @@ export default async function AdminDashboardPage() {
       .eq("status", "nouveau")
       .order("created_at", { ascending: false })
       .limit(5),
+    supabase.from("listings").select("created_at").gte("created_at", startOfTrendWindow),
   ]);
 
   const paymentsCount = monthlyPayments?.length ?? 0;
@@ -78,6 +97,20 @@ export default async function AdminDashboardPage() {
     lastMonthPaymentsSum === 0
       ? null
       : Math.round(((paymentsSum - lastMonthPaymentsSum) / lastMonthPaymentsSum) * 100);
+
+  const trendMonths = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+    return {
+      label: d.toLocaleDateString("fr-FR", { month: "short" }),
+      key: `${d.getFullYear()}-${d.getMonth()}`,
+      value: 0,
+    };
+  });
+  for (const row of (listingsHistory as { created_at: string }[] | null) ?? []) {
+    const d = new Date(row.created_at);
+    const bucket = trendMonths.find((m) => m.key === `${d.getFullYear()}-${d.getMonth()}`);
+    if (bucket) bucket.value += 1;
+  }
 
   type HostRequestRow = {
     id: string;
@@ -99,34 +132,43 @@ export default async function AdminDashboardPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-hz-navy">Dashboard</h1>
+      <h1 className="text-xl font-semibold text-hz-navy">Tableau de bord</h1>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        <StatCard label="Utilisateurs" value={totalUsers ?? 0} />
-        <StatCard label="Hôtes" value={totalHosts ?? 0} />
-        <StatCard label="Nouveaux (7j)" value={newSignups ?? 0} />
-        <StatCard label="Annonces (total)" value={totalListings ?? 0} />
-        <StatCard label="Annonces actives" value={activeListings ?? 0} />
-        <StatCard label="Annonces bloquées" value={blockedListings ?? 0} />
-        <StatCard label="Abonnements actifs" value={activeSubscriptions ?? 0} />
-        <StatCard label="Abonnements expirés" value={expiredSubscriptions ?? 0} />
+        <StatCard label="Utilisateurs" value={totalUsers ?? 0} icon={Users} />
+        <StatCard label="Hôtes" value={totalHosts ?? 0} icon={ShieldCheck} />
+        <StatCard label="Nouveaux (7j)" value={newSignups ?? 0} icon={UserPlus} />
+        <StatCard label="Annonces (total)" value={totalListings ?? 0} icon={Building2} />
+        <StatCard label="Annonces actives" value={activeListings ?? 0} icon={CheckCircle2} />
+        <StatCard label="Annonces bloquées" value={blockedListings ?? 0} icon={Ban} />
+        <StatCard label="Abonnements actifs" value={activeSubscriptions ?? 0} icon={Receipt} />
+        <StatCard label="Abonnements expirés" value={expiredSubscriptions ?? 0} icon={CalendarX} />
         <StatCard
           label="Paiements (ce mois)"
           value={paymentsCount}
-          hint={
-            revenueTrend === null
-              ? `${new Intl.NumberFormat("fr-FR").format(paymentsSum)} FCFA`
-              : `${new Intl.NumberFormat("fr-FR").format(paymentsSum)} FCFA · ${revenueTrend >= 0 ? "+" : ""}${revenueTrend}% vs mois dernier`
-          }
+          icon={Wallet}
+          trend={revenueTrend}
+          hint={`${new Intl.NumberFormat("fr-FR").format(paymentsSum)} FCFA`}
         />
-        <StatCard label="Demandes Hôte en attente" value={pendingHostRequests ?? 0} />
-        <StatCard label="Demandes de vérification (total)" value={totalVerificationRequests ?? 0} />
-        <StatCard label="Comptes suspendus" value={suspendedUsers ?? 0} />
-        <StatCard label="Comptes bannis" value={bannedUsers ?? 0} />
-        <StatCard label="Signalements ouverts" value={openReports ?? 0} />
+        <StatCard label="Demandes Hôte en attente" value={pendingHostRequests ?? 0} icon={Clock} />
+        <StatCard label="Demandes de vérification (total)" value={totalVerificationRequests ?? 0} icon={FileCheck} />
+        <StatCard label="Comptes suspendus" value={suspendedUsers ?? 0} icon={UserX} />
+        <StatCard label="Comptes bannis" value={bannedUsers ?? 0} icon={Ban} />
+        <StatCard label="Signalements ouverts" value={openReports ?? 0} icon={Flag} />
         <Link href="/admin/abonnements/demandes">
-          <StatCard label="Demandes de paiement" value={pendingPaymentRequests ?? 0} hint="En attente de vérification" />
+          <StatCard
+            label="Demandes de paiement"
+            value={pendingPaymentRequests ?? 0}
+            icon={Wallet}
+            hint="En attente de vérification"
+          />
         </Link>
+      </div>
+
+      <div className="mt-8 rounded-card border border-hz-navy/10 bg-white p-5">
+        <h2 className="font-semibold text-hz-navy">Évolution des annonces</h2>
+        <p className="mt-0.5 text-xs text-hz-ink/50">Annonces créées sur les 6 derniers mois</p>
+        <MiniTrendChart className="mt-4" points={trendMonths.map((m) => ({ label: m.label, value: m.value }))} />
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">

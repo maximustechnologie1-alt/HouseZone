@@ -17,10 +17,10 @@ import {
 } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { AdminUserMenu } from "@/components/admin/admin-user-menu";
-import { LogoMark } from "@/components/ui/logo-mark";
+import { LogoMark, Wordmark } from "@/components/ui/logo-mark";
 
 const NAV = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
   { href: "/admin/hotes", label: "Hôtes & vérifications", icon: ShieldCheck },
   { href: "/admin/annonces", label: "Annonces", icon: Building2 },
@@ -43,8 +43,11 @@ export default async function AdminDashboardLayout({ children }: LayoutProps<"/"
     <div className="flex min-h-screen bg-zinc-50">
       <aside className="hidden w-64 shrink-0 border-r border-hz-navy/10 bg-hz-navy p-5 text-white lg:block">
         <Link href="/admin" className="flex items-center gap-2">
-          <LogoMark size={36} />
-          <span className="text-lg font-semibold">HouseZone Admin</span>
+          <LogoMark size={32} />
+          <span className="flex items-baseline gap-1.5">
+            <Wordmark variant="light" />
+            <span className="text-sm font-medium text-white/60">Admin</span>
+          </span>
         </Link>
         <nav className="mt-8 space-y-0.5 text-sm">
           {NAV.map(({ href, label, icon: Icon }) => (

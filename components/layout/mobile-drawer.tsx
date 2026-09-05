@@ -18,12 +18,13 @@ import {
   Mail,
   FileText,
   ScrollText,
+  ClipboardList,
 } from "lucide-react";
 import { signOutAction } from "@/lib/actions/auth";
 import { useMounted } from "@/lib/hooks/use-mounted";
 import { useNavDrawer } from "@/components/layout/nav-drawer-context";
 import { useI18n } from "@/lib/i18n/context";
-import { LogoMark } from "@/components/ui/logo-mark";
+import { LogoMark, Wordmark } from "@/components/ui/logo-mark";
 import { LanguageSelector } from "@/components/layout/language-selector";
 import { cn } from "@/lib/utils";
 import type { Language, Profile } from "@/lib/types/database";
@@ -58,9 +59,10 @@ function MenuSection({ title, links, onNavigate }: { title: string; links: MenuL
 
 // Mobile-only slide-over drawer, opened from the "Profil" tab of the bottom
 // navigation (see mobile-bottom-nav.tsx) — it has no trigger button of its
-// own. Favoris / Messages / Avis de recherche are intentionally absent here
-// since they already live in the bottom navigation; duplicating them would
-// give the user two paths to the same screen.
+// own. Favoris / Messages are intentionally absent here since they already
+// live in the bottom navigation; duplicating them would give the user two
+// paths to the same screen. Avis de recherche lives here because the bottom
+// nav's third slot is now "Rechercher".
 export function MobileDrawer({
   user,
   isHost,
@@ -105,10 +107,11 @@ export function MobileDrawer({
 
   const compteLinks: MenuLink[] = user
     ? [
+        { href: "/avis-de-recherche", label: t("nav.reviews"), icon: ClipboardList },
         { href: "/profil", label: t("nav.manage_profile"), icon: User },
         { href: "/profil/parametres", label: t("nav.settings"), icon: Settings },
       ]
-    : [];
+    : [{ href: "/avis-de-recherche", label: t("nav.reviews"), icon: ClipboardList }];
 
   const supportLinks: MenuLink[] = [
     { href: "/aide", label: t("nav.help_center"), icon: HelpCircle },
@@ -144,8 +147,8 @@ export function MobileDrawer({
         >
           <div className="flex items-center justify-between border-b border-hz-navy/10 px-4 py-4">
             <Link href="/" onClick={close} className="flex items-center gap-2">
-              <LogoMark size={32} />
-              <span className="font-semibold text-hz-navy">HouseZone</span>
+              <LogoMark size={28} />
+              <Wordmark />
             </Link>
             <button
               type="button"

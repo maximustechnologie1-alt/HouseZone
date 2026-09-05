@@ -3,6 +3,12 @@ import type { Dictionary } from "../types";
 const ru: Dictionary = {
   nav: {
     home: "Главная",
+    search: "Поиск",
+    buy: "Купить",
+    rent: "Аренда",
+    lands: "Участки",
+    hotels: "Отели",
+    publish_listing: "Разместить объявление",
     favorites: "Избранное",
     reviews: "Заявки на поиск",
     reviews_short: "Заявки",
