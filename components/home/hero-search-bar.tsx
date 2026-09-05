@@ -4,15 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { AdvancedSearchSheet } from "@/components/search/advanced-search-sheet";
-import type { City, Neighborhood, PropertyCategory } from "@/lib/types/database";
+import type { City, PropertyCategory } from "@/lib/types/database";
 
 export function HeroSearchBar({
   cities,
-  neighborhoods,
   categories,
 }: {
   cities: City[];
-  neighborhoods: Neighborhood[];
   categories: PropertyCategory[];
 }) {
   const router = useRouter();
@@ -172,7 +170,6 @@ export function HeroSearchBar({
         open={open}
         onClose={() => setOpen(false)}
         cities={cities}
-        neighborhoods={neighborhoods}
         categories={categories}
       />
     </>

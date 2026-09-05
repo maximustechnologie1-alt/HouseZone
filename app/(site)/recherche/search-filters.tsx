@@ -1,20 +1,19 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Select, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { CityCombobox } from "@/components/search/city-combobox";
 import { useI18n } from "@/lib/i18n/context";
-import type { City, Neighborhood, PropertyCategory } from "@/lib/types/database";
+import type { City, PropertyCategory } from "@/lib/types/database";
 
 export function SearchFilters({
   cities,
-  neighborhoods,
   categories,
 }: {
   cities: City[];
-  neighborhoods: Neighborhood[];
   categories: PropertyCategory[];
 }) {
   const router = useRouter();
@@ -37,10 +36,6 @@ export function SearchFilters({
   }
 
   const selectedCity = searchParams.get("ville") ?? "";
-  const filteredNeighborhoods = useMemo(
-    () => neighborhoods.filter((n) => n.city_id === selectedCity),
-    [neighborhoods, selectedCity]
-  );
 
   const activeCount = [
     "ville",
@@ -76,37 +71,24 @@ export function SearchFilters({
           <option value="vente">{t("search.sale")}</option>
           <option value="reservation">{t("search.reservation_furnished")}</option>
         </Select>
-        <Select
-          defaultValue={selectedCity}
-          onChange={(e) => {
-            const params = new URLSearchParams(searchParams.toString());
-            if (e.target.value) params.set("ville", e.target.value);
-            else params.delete("ville");
-            params.delete("quartier");
-            params.delete("page");
-            startTransition(() => router.push(`${pathname}?${params.toString()}`));
-          }}
-        >
-          <option value="">{t("search.all_cities")}</option>
-          {cities.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </Select>
-        <Select
-          key={selectedCity}
+        <CityCombobox
+          cities={cities}
+          value={selectedCity}
+          onChange={(cityId) => update("ville", cityId)}
+          placeholder={t("search.all_cities")}
+          searchPlaceholder={t("search.city_search_placeholder")}
+          allLabel={t("search.all_cities")}
+        />
+        <Input
+          key={searchParams.get("quartier") ?? ""}
           defaultValue={searchParams.get("quartier") ?? ""}
-          onChange={(e) => update("quartier", e.target.value)}
-          disabled={!selectedCity}
-        >
-          <option value="">{t("search.all_neighborhoods")}</option>
-          {filteredNeighborhoods.map((n) => (
-            <option key={n.id} value={n.id}>
-              {n.name}
-            </option>
-          ))}
-        </Select>
+          placeholder={t("search.neighborhood_placeholder")}
+          enterKeyHint="search"
+          onBlur={(e) => update("quartier", e.target.value.trim())}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") e.currentTarget.blur();
+          }}
+        />
         <Select
           defaultValue={searchParams.get("categorie") ?? ""}
           onChange={(e) => update("categorie", e.target.value)}

@@ -69,7 +69,8 @@ function mapRow(row: ListingCardRow, hostVerified: boolean): PropertyCardData {
 export interface SearchFilters {
   q?: string;
   cityId?: string;
-  neighborhoodId?: string;
+  /** Quartier en saisie libre : recherche sur le nom du quartier et l'adresse. */
+  neighborhood?: string;
   categoryId?: string;
   operationType?: "location" | "vente" | "reservation";
   minPrice?: number;
@@ -99,7 +100,24 @@ export async function searchListings(filters: SearchFilters) {
 
   if (filters.q) query = query.ilike("title", `%${filters.q}%`);
   if (filters.cityId) query = query.eq("city_id", filters.cityId);
-  if (filters.neighborhoodId) query = query.eq("neighborhood_id", filters.neighborhoodId);
+
+  // Quartier libre : on fait correspondre le texte saisi soit au nom d'un
+  // quartier référencé (neighborhoods.name), soit à l'adresse libre de
+  // l'annonce (address). On résout d'abord les ids de quartiers dont le nom
+  // correspond, puis on combine les deux critères en OR sur `listings`.
+  const neighborhoodText = filters.neighborhood?.trim();
+  if (neighborhoodText) {
+    const pattern = `%${neighborhoodText.replace(/[%,()]/g, " ")}%`;
+    let nQuery = supabase.from("neighborhoods").select("id").ilike("name", pattern);
+    if (filters.cityId) nQuery = nQuery.eq("city_id", filters.cityId);
+    const { data: matchingNeighborhoods } = await nQuery;
+    const ids = (matchingNeighborhoods ?? []).map((n) => n.id as string);
+    query = query.or(
+      ids.length > 0
+        ? `address.ilike.${pattern},neighborhood_id.in.(${ids.join(",")})`
+        : `address.ilike.${pattern}`
+    );
+  }
   if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
   if (filters.operationType) query = query.eq("operation_type", filters.operationType);
   if (filters.minPrice) query = query.gte("price", filters.minPrice);

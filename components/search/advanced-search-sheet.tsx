@@ -1,21 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import { X, Search, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMounted } from "@/lib/hooks/use-mounted";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/field";
+import { Input } from "@/components/ui/field";
+import { CityCombobox } from "@/components/search/city-combobox";
 import { useI18n } from "@/lib/i18n/context";
-import type { City, Neighborhood, PropertyCategory } from "@/lib/types/database";
+import type { City, PropertyCategory } from "@/lib/types/database";
 
 interface AdvancedSearchSheetProps {
   open: boolean;
   onClose: () => void;
   cities: City[];
-  neighborhoods: Neighborhood[];
   categories: PropertyCategory[];
 }
 
@@ -23,18 +23,15 @@ interface AdvancedSearchSheetProps {
 // sheet est ouvert. Ainsi, à chaque ouverture, le contenu est remonté à
 // neuf et ses states s'initialisent depuis les query params actuels de
 // l'URL (ex: rouvert depuis /recherche avec des filtres déjà actifs).
-export function AdvancedSearchSheet({ open, onClose, cities, neighborhoods, categories }: AdvancedSearchSheetProps) {
+export function AdvancedSearchSheet({ open, onClose, cities, categories }: AdvancedSearchSheetProps) {
   const mounted = useMounted();
   if (!open || !mounted) return null;
-  return (
-    <AdvancedSearchSheetContent onClose={onClose} cities={cities} neighborhoods={neighborhoods} categories={categories} />
-  );
+  return <AdvancedSearchSheetContent onClose={onClose} cities={cities} categories={categories} />;
 }
 
 function AdvancedSearchSheetContent({
   onClose,
   cities,
-  neighborhoods,
   categories,
 }: Omit<AdvancedSearchSheetProps, "open">) {
   const router = useRouter();
@@ -54,7 +51,7 @@ function AdvancedSearchSheetContent({
   ] as const;
 
   const [cityId, setCityId] = useState(() => searchParams.get("ville") ?? "");
-  const [neighborhoodId, setNeighborhoodId] = useState(() => searchParams.get("quartier") ?? "");
+  const [neighborhood, setNeighborhood] = useState(() => searchParams.get("quartier") ?? "");
   const [categoryId, setCategoryId] = useState(() => searchParams.get("categorie") ?? "");
   const [operation, setOperation] = useState<string>(() => searchParams.get("operation") ?? "");
   const [minPrice, setMinPrice] = useState(() => searchParams.get("prixMin") ?? "");
@@ -64,15 +61,15 @@ function AdvancedSearchSheetContent({
   const [verifiedOnly, setVerifiedOnly] = useState(() => searchParams.get("verifie") === "1");
   const [featuredOnly, setFeaturedOnly] = useState(() => searchParams.get("une") === "1");
 
-  const filteredNeighborhoods = useMemo(
-    () => neighborhoods.filter((n) => n.city_id === cityId),
-    [neighborhoods, cityId]
-  );
+  function resetLocation() {
+    setCityId("");
+    setNeighborhood("");
+  }
 
   function submit() {
     const params = new URLSearchParams();
     if (cityId) params.set("ville", cityId);
-    if (neighborhoodId) params.set("quartier", neighborhoodId);
+    if (neighborhood.trim()) params.set("quartier", neighborhood.trim());
     if (categoryId) params.set("categorie", categoryId);
     if (operation) params.set("operation", operation);
     if (minPrice) params.set("prixMin", minPrice);
@@ -102,26 +99,47 @@ function AdvancedSearchSheetContent({
 
         <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
           <div>
-            <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-hz-navy">
-              <MapPin className="h-4 w-4" /> {t("search.location_section")}
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <Select value={cityId} onChange={(e) => { setCityId(e.target.value); setNeighborhoodId(""); }}>
-                <option value="">{t("search.all_cities")}</option>
-                {cities.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </Select>
-              <Select value={neighborhoodId} onChange={(e) => setNeighborhoodId(e.target.value)} disabled={!cityId}>
-                <option value="">{t("search.all_neighborhoods")}</option>
-                {filteredNeighborhoods.map((n) => (
-                  <option key={n.id} value={n.id}>
-                    {n.name}
-                  </option>
-                ))}
-              </Select>
+            <div className="mb-2 flex items-center justify-between">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-hz-navy">
+                <MapPin className="h-4 w-4" /> {t("search.location_section")}
+              </p>
+              {(cityId || neighborhood.trim()) && (
+                <button
+                  type="button"
+                  onClick={resetLocation}
+                  className="text-xs font-medium text-hz-blue hover:underline"
+                >
+                  {t("search.reset_location")}
+                </button>
+              )}
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-hz-ink/60">{t("search.city_label")}</label>
+                <CityCombobox
+                  cities={cities}
+                  value={cityId}
+                  onChange={setCityId}
+                  placeholder={t("search.all_cities")}
+                  searchPlaceholder={t("search.city_search_placeholder")}
+                  allLabel={t("search.all_cities")}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-hz-ink/60">{t("search.neighborhood_label")}</label>
+                <Input
+                  value={neighborhood}
+                  onChange={(e) => setNeighborhood(e.target.value)}
+                  placeholder={t("search.neighborhood_placeholder")}
+                  enterKeyHint="search"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      submit();
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
 

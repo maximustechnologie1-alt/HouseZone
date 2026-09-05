@@ -8,7 +8,7 @@ import {
   getListingsByCategorySlugs,
   getListingsByCategory,
 } from "@/lib/data/listings";
-import { getCities, getNeighborhoods, getCategories } from "@/lib/data/taxonomies";
+import { getCities, getCategories } from "@/lib/data/taxonomies";
 import { EmptyState } from "@/components/ui/empty-state";
 import { HeroSearchBar } from "@/components/home/hero-search-bar";
 import { CategoryScroller } from "@/components/home/category-scroller";
@@ -19,9 +19,8 @@ import { NearbySection } from "@/components/home/nearby-section";
 export default async function HomePage() {
   const user = await getCurrentUser();
 
-  const [cities, neighborhoods, categories] = await Promise.all([
+  const [cities, categories] = await Promise.all([
     getCities(),
-    getNeighborhoods(),
     getCategories(),
   ]);
 
@@ -65,7 +64,7 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="lg:mx-auto lg:max-w-3xl">
-            <HeroSearchBar cities={cities} neighborhoods={neighborhoods} categories={categories} />
+            <HeroSearchBar cities={cities} categories={categories} />
           </div>
         </div>
       </section>

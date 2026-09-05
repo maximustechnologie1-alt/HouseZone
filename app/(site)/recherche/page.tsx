@@ -1,7 +1,7 @@
 import { SearchX } from "lucide-react";
 import { searchListings } from "@/lib/data/listings";
 import { getUserFavoriteIds } from "@/lib/data/listings";
-import { getCities, getCategories, getNeighborhoods } from "@/lib/data/taxonomies";
+import { getCities, getCategories } from "@/lib/data/taxonomies";
 import { getCurrentUser } from "@/lib/auth";
 import { PropertyCard } from "@/components/listings/property-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -20,10 +20,9 @@ export default async function SearchPage({ searchParams }: PageProps<"/recherche
   const params = await searchParams;
   const page = Number(params.page) || 1;
 
-  const [user, cities, neighborhoods, categories, locale] = await Promise.all([
+  const [user, cities, categories, locale] = await Promise.all([
     getCurrentUser(),
     getCities(),
-    getNeighborhoods(),
     getCategories(),
     getServerLocale(),
   ]);
@@ -36,7 +35,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/recherche
   const { listings, total, pageSize } = await searchListings({
     q: typeof params.q === "string" ? params.q : undefined,
     cityId: typeof params.ville === "string" ? params.ville : undefined,
-    neighborhoodId: typeof params.quartier === "string" ? params.quartier : undefined,
+    neighborhood: typeof params.quartier === "string" ? params.quartier : undefined,
     categoryId,
     operationType: (params.operation as "location" | "vente" | "reservation") || undefined,
     minPrice: params.prixMin ? Number(params.prixMin) : undefined,
@@ -59,7 +58,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/recherche
       </p>
 
       <div className="mt-4">
-        <SearchFilters cities={cities} neighborhoods={neighborhoods} categories={categories} />
+        <SearchFilters cities={cities} categories={categories} />
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
